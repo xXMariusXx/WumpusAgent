@@ -22,6 +22,7 @@ public class MyAgent extends WumpusHunterAgent {
 
     //eigene Anpassungen
     Welt welt;
+    Berechnung berechnung;
 
     public static void main(String[] args) {
 
@@ -34,6 +35,7 @@ public class MyAgent extends WumpusHunterAgent {
 
         //eigene Anpassung
         welt = new Welt();
+        berechnung = new Berechnung(welt);
     }
 
     /**
@@ -181,20 +183,10 @@ public class MyAgent extends WumpusHunterAgent {
     public HunterAction action() {
 
         // 2. -----NÄCHSTEN SCHRITT PLANEN-----
-        Berechnung berechnung = new Berechnung(welt);
+        berechnung.berechne();
 
 
-
-        if (actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
-            nextAction = HunterAction.TURN_RIGHT;
-        } else {
-            nextAction = HunterAction.GO_FORWARD;
-        }
-
-
-        welt.addNextAction(nextAction);
         HunterAction hunterAction = welt.getNextAction();
-
         welt.aktuelleAktionAusgefuehrt();
         return hunterAction;
     }

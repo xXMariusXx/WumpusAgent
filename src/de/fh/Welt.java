@@ -107,6 +107,28 @@ public class Welt {
         }
     }
 
+    public Feld getFeld(int x, int y){
+        if(x>=map[0].length || y>=map.length) return new Feld(UNBEKANNT);
+        return map[y][x];
+    }
+
+    public int[] getFeldPos(Feld f){
+        int[] res = new int[2];
+        res[0] = -1;
+        res[1] = -1;
+        for (int i = 0; i < map.length ; i++) {
+            for (int j = 0; j < map[0].length ; j++) {
+                if (map[i][j] == f){
+                    res[0] = j;
+                    res[1] = i;
+                    return res;
+                }
+
+            }
+        }
+        return res;
+    }
+
 
     // ---- Aktion Zeugs ----
     public HunterAction getLastAction() {

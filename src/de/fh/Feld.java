@@ -14,6 +14,7 @@ public class Feld {
     enum Zustand {
         HUNTER(39),
         WALL(99),
+        UNBEKANNT(7),
         FREI(10),
         WIND(30),
         GESTANK1(90),
