@@ -59,43 +59,7 @@ public class MyAgent extends WumpusHunterAgent {
 
 
 		// ---- Gestank auswerten
-		if(!stenchRadar.isEmpty())
-		{
-			for(Map.Entry<Integer, Integer> g : stenchRadar.entrySet()){
-				switch (g.getValue()){
-					case 1:
-						welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1],GESTANK1);
-						welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1],GESTANK1);
-						welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]+1,GESTANK1);
-						welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]-1,GESTANK1);
-						break;
-					case 2:
-						welt.addZustand(welt.getHunterPos()[0]+2,welt.getHunterPos()[1],GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0]-2,welt.getHunterPos()[1],GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]+2,GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]-2,GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]+1,GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]-1,GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]-1,GESTANK2);
-						welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]+1,GESTANK2);
-						break;
-					case 3:
-						welt.addZustand(welt.getHunterPos()[0]+3,welt.getHunterPos()[1],GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]-3,welt.getHunterPos()[1],GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]+3,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]-3,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]+2,welt.getHunterPos()[1]+1,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]+2,welt.getHunterPos()[1]-1,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]-2,welt.getHunterPos()[1]+1,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]-2,welt.getHunterPos()[1]-1,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]+2,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]-2,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]+2,GESTANK3);
-						welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]-2,GESTANK3);
-						break;
-				}
-			}
-		}
+		this.gestankAuswerten();
 
 
 		// ---- AKTUELLEN STAND AUSGEBEN ----
@@ -318,4 +282,44 @@ public class MyAgent extends WumpusHunterAgent {
 			welt.setWumpusGetoetet();
 		}
 	}
+
+	private void gestankAuswerten(){
+        if(!stenchRadar.isEmpty())
+        {
+            for(Map.Entry<Integer, Integer> g : stenchRadar.entrySet()){
+                switch (g.getValue()){
+                    case 1:
+                        welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1],GESTANK1);
+                        welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1],GESTANK1);
+                        welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]+1,GESTANK1);
+                        welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]-1,GESTANK1);
+                        break;
+                    case 2:
+                        welt.addZustand(welt.getHunterPos()[0]+2,welt.getHunterPos()[1],GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0]-2,welt.getHunterPos()[1],GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]+2,GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]-2,GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]+1,GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]-1,GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]-1,GESTANK2);
+                        welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]+1,GESTANK2);
+                        break;
+                    case 3:
+                        welt.addZustand(welt.getHunterPos()[0]+3,welt.getHunterPos()[1],GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]-3,welt.getHunterPos()[1],GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]+3,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0],welt.getHunterPos()[1]-3,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]+2,welt.getHunterPos()[1]+1,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]+2,welt.getHunterPos()[1]-1,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]-2,welt.getHunterPos()[1]+1,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]-2,welt.getHunterPos()[1]-1,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]+2,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]+1,welt.getHunterPos()[1]-2,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]+2,GESTANK3);
+                        welt.addZustand(welt.getHunterPos()[0]-1,welt.getHunterPos()[1]-2,GESTANK3);
+                        break;
+                }
+            }
+        }
+    }
 }
