@@ -14,6 +14,9 @@ public class Welt {
     private Feld[][] map;
 
 
+    //TODO -Außengrenzen festlegen für möglichen Wumpus
+    //TODO -automatische Randmauern
+
     // ---- Hunter Stats ----
     private int[] hunterPos = new int[2]; //[0] = X-Wert, [1] = Y-Wert
     private Himmelsrichtung blickrichtung;

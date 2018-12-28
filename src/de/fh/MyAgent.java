@@ -53,8 +53,9 @@ public class MyAgent extends WumpusHunterAgent {
 		stenchRadar = this.percept.getWumpusStenchRadar();
 
 
+		// ----------- WELT AKTUALISIEREN -----------
 
-		// -----WELT AKTUALISIEREN-----
+        // ---- Hunter Stats setzen ----
 		this.updateHunterStats();
 
 
@@ -62,7 +63,7 @@ public class MyAgent extends WumpusHunterAgent {
 		this.gestankAuswerten();
 
 
-		// ---- AKTUELLEN STAND AUSGEBEN ----
+		// -------- AKTUELLEN STAND AUSGEBEN --------
 
 		System.out.println("\n.........................................................................");
 
