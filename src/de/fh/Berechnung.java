@@ -1,5 +1,6 @@
 package de.fh;
 
+import de.fh.suche.ASternSuche;
 import de.fh.wumpus.enums.HunterAction;
 import de.fh.wumpus.enums.HunterActionEffect;
 
@@ -20,7 +21,7 @@ public class Berechnung {
 
         //wenn noch kein Zielfeld gesetzt oder Zielfeld erreicht: neues Ziel berrechnen
         if (aktuellesZielfeld.getPosition()[0] == -99 && aktuellesZielfeld.getPosition()[1] == -99 || welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]) == aktuellesZielfeld) {
-            bestimmeNaechstesFeld();
+            bestimmeNaechstesZielFeld();
         }
 
         //wenn aktuell ein Zielfeld gegeben ist: hin laufen
@@ -37,9 +38,9 @@ public class Berechnung {
     }
 
     //Hilfsmethoden der Klasse
-    private HunterAction bestimmeWegZumFeld( ) {
-        Feld aktHunterPos = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]);
-        int[] feldPos = aktuellesZielfeld.getPosition();
+    private HunterAction bestimmeWegZumFeld() {
+        int[] feldPos = bestimmeNaechstesZwischenFeld().getPosition();
+
         if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] + 1 == feldPos[1]) {
             switch (welt.getBlickrichtung()) {
                 case EAST:
@@ -87,12 +88,23 @@ public class Berechnung {
         }
 
 
-        //keinen Weg gefunden:
-        System.err.println("Weg zum Ziel zu gefährlich, Spiel verlassen!");
-        return HunterAction.QUIT_GAME;
+        System.err.println("Fehler bei Wegbestimmung, Zwischenziel liegt in in der Nähe des Hunters");
+        return null;
     }
 
-    private void bestimmeNaechstesFeld() {
+    private Feld bestimmeNaechstesZwischenFeld()
+
+    {
+        Feld aktHunterPos = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]);
+        ASternSuche aStern = new ASternSuche(aktHunterPos,aktuellesZielfeld, welt);
+        Feld zwischenZiel = aStern.suche();
+
+
+        System.err.println("Keinen Weg zum Ziel gefunden");
+        return zwischenZiel;
+    }
+
+    private void bestimmeNaechstesZielFeld() {
 
         //wenn Gold bereits aufgesammelt ist, zurück zum Start
         if (welt.isGoldAufgesammelt()) {
