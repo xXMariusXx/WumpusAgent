@@ -11,34 +11,35 @@ public class Berechnung {
 
     public Berechnung(Welt welt) {
         this.welt = welt;
+        aktuellesZielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99);
     }
 
     //Hauptmethode die aufgerufen wird
     public void berechne() {
         HunterAction nextAction = HunterAction.GO_FORWARD;
 
-        aktuellesZielfeld = bestimmeNaechstesFeld();
-        //wenn aktuell ein Zielfeld gegeben ist
-        if (aktuellesZielfeld.getPosition()[0] != -1 && aktuellesZielfeld.getPosition()[1] != -1){
-            bestimmeWegZumFeld(aktuellesZielfeld);
-        }
-        //wenn aktuell kein Ziel gegeben (d.H
-        else{
-
+        //wenn noch kein Zielfeld gesetzt oder Zielfeld erreicht: neues Ziel berrechnen
+        if (aktuellesZielfeld.getPosition()[0] == -99 && aktuellesZielfeld.getPosition()[1] == -99 || welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]) == aktuellesZielfeld) {
+            bestimmeNaechstesFeld();
         }
 
-
-
-        Feld naechstesFeld = this.bestimmeNaechstesFeld();
-        nextAction = this.bestimmeWegZumFeld(naechstesFeld);
-
+        //wenn aktuell ein Zielfeld gegeben ist: hin laufen
+        if (aktuellesZielfeld.getPosition()[0] > -1 && aktuellesZielfeld.getPosition()[1] > -1 && welt.isInMap(aktuellesZielfeld.getPosition()[0], aktuellesZielfeld.getPosition()[1])) {
+            nextAction = bestimmeWegZumFeld();
+        }
+        //wenn aktuell kein Ziel gegeben (d.h jedes Feld mit geringem Risiko besucht und Gold nicht gefunden) Werte: (-1, -1)
+        else {
+            System.err.println("Spiel verlassen!");
+            nextAction = HunterAction.QUIT_GAME;
+        }
 
         welt.addNextAction(nextAction);
     }
 
     //Hilfsmethoden der Klasse
-    private HunterAction bestimmeWegZumFeld(Feld f) {
-        int[] feldPos = f.getPosition();
+    private HunterAction bestimmeWegZumFeld( ) {
+        Feld aktHunterPos = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]);
+        int[] feldPos = aktuellesZielfeld.getPosition();
         if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] + 1 == feldPos[1]) {
             switch (welt.getBlickrichtung()) {
                 case EAST:
@@ -85,30 +86,29 @@ public class Berechnung {
             }
         }
 
-        return HunterAction.SIT;
 
+        //keinen Weg gefunden:
+        System.err.println("Weg zum Ziel zu gefährlich, Spiel verlassen!");
+        return HunterAction.QUIT_GAME;
     }
 
-    private Feld bestimmeNaechstesFeld() {
+    private void bestimmeNaechstesFeld() {
 
         //wenn Gold bereits aufgesammelt ist, zurück zum Start
-        if(welt.isGoldAufgesammelt()){
-            return welt.getFeld(1,1);
+        if (welt.isGoldAufgesammelt()) {
+            aktuellesZielfeld = welt.getFeld(1, 1);
         }
 
         //nächstes unbekanntes Feld suchen
         Feld f = sucheNaechstesUnbekanntes(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
-        if(f.getPosition()[0] == -1 || f.getPosition()[1] == -1){
-            return welt.getFeld(1,1);
-        }
-        return f;
+        aktuellesZielfeld = f;
 
 
     }
 
     private Feld sucheNaechstesUnbekanntes(int x, int y, int maxRisiko) {
         //Schleife für Schrittweite
-        for (int m = 1; m < 0; m++) {
+        for (int m = 1; m < Math.max(welt.mapSize()[0], welt.mapSize()[1]); m++) {
 
             // 4 direkt erreichbare Felder prüfen
             if (welt.isInMap(x + m, y) && !welt.getFeld(x + m, y).isBesucht() && welt.getFeld(x + m, y).getRisiko() < maxRisiko) {
@@ -144,21 +144,18 @@ public class Berechnung {
                 if (welt.isInMap(x + i, y + m) && !welt.getFeld(x + i, y + m).isBesucht() && welt.getFeld(x + i, y + m).getRisiko() < maxRisiko) {
                     return welt.getFeld(x + i, y + m);
                 }
-                if (welt.isInMap(x + i, y - m) && !welt.getFeld(x + i, y - m).isBesucht() && welt.getFeld(x + i, y - m).getRisiko() < maxRisiko)
-                {
+                if (welt.isInMap(x + i, y - m) && !welt.getFeld(x + i, y - m).isBesucht() && welt.getFeld(x + i, y - m).getRisiko() < maxRisiko) {
                     return welt.getFeld(x + m, y - i);
                 }
-                if (welt.isInMap(x - i, y + m) && !welt.getFeld(x - i, y + m).isBesucht() && welt.getFeld(x - i, y + m).getRisiko() < maxRisiko)
-                {
+                if (welt.isInMap(x - i, y + m) && !welt.getFeld(x - i, y + m).isBesucht() && welt.getFeld(x - i, y + m).getRisiko() < maxRisiko) {
                     return welt.getFeld(x - m, y + i);
                 }
-                if (welt.isInMap(x - i, y - m) && !welt.getFeld(x - i, y - m).isBesucht() && welt.getFeld(x - i, y - m).getRisiko() < maxRisiko)
-                {
+                if (welt.isInMap(x - i, y - m) && !welt.getFeld(x - i, y - m).isBesucht() && welt.getFeld(x - i, y - m).getRisiko() < maxRisiko) {
                     return welt.getFeld(x - i, y - m);
                 }
             }
         }
-        System.err.println("Kein unbekanntes Feld mehr vorhanden!");
+        System.err.println("Kein unbekanntes Feld mehr vorhanden oder Risiko zu groß!");
         return new Feld(Feld.Zustand.UNBEKANNT, -1, -1);
     }
 

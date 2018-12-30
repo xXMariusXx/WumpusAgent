@@ -119,6 +119,13 @@ public class Welt {
         return (x<map[0].length && y<map.length && x>=0 && y>=0);
     }
 
+    public int[] mapSize(){
+        int[] size = new int[2];
+        size[0] = map[0].length;
+        size[1] = map.length;
+        return size;
+    }
+
 
     // ---- Aktion Zeugs ----
     public HunterAction getLastAction() {
