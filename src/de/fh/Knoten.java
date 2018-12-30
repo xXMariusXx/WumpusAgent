@@ -50,8 +50,13 @@ public class Knoten {
     }
 
     public boolean isZiel(Feld feld) {
-        return this.feld == feld;
+        return this.feld == feld ;
     }
 
+    @Override
+    public int hashCode(){
+        String s = feld.getPosition()[0]+","+feld.getPosition()[1];
+        return s.hashCode();
+    }
 
 }

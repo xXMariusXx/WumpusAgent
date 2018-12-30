@@ -7,9 +7,8 @@ public class Feld {
     //Attribute
     private HashSet<Zustand> set;
     private int risiko;
-    private boolean besucht = false;
+    private boolean besucht;
     private int[] position;
-
 
 
     //Zustand Enum
@@ -45,7 +44,8 @@ public class Feld {
 
     //Konstruktoren
     public Feld(HashSet<Zustand> tmp, int x, int y) {
-        set = tmp;
+        set = new HashSet<Zustand>();
+        tmp.forEach(this::addZustand);
         position = new int[2];
         position[0] = x;
         position[1] = y;
@@ -54,7 +54,7 @@ public class Feld {
 
     public Feld(Zustand z, int x, int y) {
         set = new HashSet<Zustand>();
-        set.add(z);
+        addZustand(z);
         position = new int[2];
         position[0] = x;
         position[1] = y;
@@ -81,13 +81,26 @@ public class Feld {
                 set.add(z);
                 break;
 
+            case WALL:
+                set.add(z);
+                setBesucht();
+                break;
+
+            case HUNTER:
+                set.add(z);
+                setBesucht();
+                break;
+
             case EVTFALLE:
                 if (besucht) break;
                 set.add(z);
+                setBesucht();
+                break;
 
             default:
                 set.add(z);
         }
+
     }
 
     public void removeZustand(Zustand z) {
@@ -121,6 +134,11 @@ public class Feld {
 
     public void setPosition(int[] position) {
         this.position = position;
+    }
+
+    @Override
+    public String toString() {
+        return "(X,Y):" + getPosition()[0] + "," + getPosition()[1] + getZustaende() + getRisiko();
     }
 
     //Interne Methoden

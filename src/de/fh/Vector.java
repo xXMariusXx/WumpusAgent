@@ -1,3 +1,5 @@
+package de.fh;
+
 public class Vector{
     private int x;
     private int y;

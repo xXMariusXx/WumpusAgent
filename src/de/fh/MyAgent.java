@@ -204,6 +204,7 @@ public class MyAgent extends WumpusHunterAgent {
 
         HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
+        System.out.println(nextHunterAction);
         return nextHunterAction;
     }
 

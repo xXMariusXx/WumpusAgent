@@ -22,42 +22,50 @@ public class ASternSuche {
 
     //Wenn erfolgreich, wird der Nachfolger vom Start zurück gegeben
     public Feld suche() {
-        this.fuegeKnotenEin(new Knoten(start));
-        //Solange noch Expansionskandidaten vorhanden (Mindestens die Wurzel)
-        while (!openList.isEmpty()) {
+        System.out.println("start Feld: " + start);
+        System.out.println("ziel Feld: " + ziel);
+        if (start != ziel) {
+            this.fuegeKnotenEin(new Knoten(start));
 
-            //Es wird *immer* der erste Knoten aus der Openlist entnommen
-            //Die Sortierung der Openlist bestimmt die Suche
-            Knoten expansionsKandidat = this.openList.remove(0);
-            //Wird ein Knoten aus der Openlist entfernt landet dieser sofort in der Closelist, damit dieser nicht noch einmal expandiert wird
-            this.closeList.add(expansionsKandidat.hashCode());
+            //Solange noch Expansionskandidaten vorhanden (Mindestens die Wurzel)
+            while (!openList.isEmpty()) {
 
-            //Schaue ob Knoten Ziel ist
-            if (expansionsKandidat.isZiel(ziel)) {
-                //Kandidat entspricht dem geünschten Zielzustand
-                Knoten loesungsKnoten = expansionsKandidat;
-                while (loesungsKnoten.getVorgaenger() != null)
-                {
-                    loesungsKnoten = loesungsKnoten.getVorgaenger();
+                //Es wird *immer* der erste Knoten aus der Openlist entnommen
+                //Die Sortierung der Openlist bestimmt die Suche
+                Knoten expansionsKandidat = this.openList.remove(0);
+                System.out.println("herausgenommenes Feld:" + expansionsKandidat.getFeld());
+                //Wird ein Knoten aus der Openlist entfernt landet dieser sofort in der Closelist, damit dieser nicht noch einmal expandiert wird
+                this.closeList.add(expansionsKandidat.hashCode());
+
+                //Schaue ob Knoten Ziel ist
+
+                if (expansionsKandidat.isZiel(ziel)) {
+                    //Kandidat entspricht dem geünschten Zielzustand
+                    Knoten loesungsKnoten = expansionsKandidat;
+                    while (loesungsKnoten.getVorgaenger().getFeld() != start) {
+                        loesungsKnoten = loesungsKnoten.getVorgaenger();
+                    }
+                    return loesungsKnoten.getFeld();
+
+                } else {
+                    //Ist nicht gleich dem Zielzustand, also expandiere nächsten Knoten
+                    expandiereKnoten(expansionsKandidat);
+
                 }
-                return loesungsKnoten.getFeld();
-            } else {
-                //Ist nicht gleich dem Zielzustand, also expandiere nächsten Knoten
-                expandiereKnoten(expansionsKandidat);
-
             }
         }
 
+
         //Keine Lösung gefunden
-        return new Feld(Feld.Zustand.UNBEKANNT,-1,-1);
+        return new Feld(Feld.Zustand.UNBEKANNT, -1, -1);
     }
 
     public void bewerteKnoten(Knoten expansionsKandidat) {
 
-        int schaetzwert, pfadkosten = 10; //je höher die Pfadkosten gesetzt werden, desto mehr Risiko wird eingegangen
+        int schaetzwert, pfadkosten = 10; //je höher die Pfadkosten gesetzt werden, desto unwichtiger der Schätzwert
 
         //möglich geringe Entfernung zum Ziel und geringes Risiko
-        schaetzwert = expansionsKandidat.getFeld().getRisiko() + berechneEntfernung(expansionsKandidat);
+        schaetzwert = expansionsKandidat.getFeld().getRisiko() + 4 * berechneEntfernung(expansionsKandidat); //je höher der Faktor des unwichtiger das Risiko
         expansionsKandidat.setSchaetzwert(schaetzwert);
 
         //setzt die bisherigen Pfadkosten zu dem Knoten
@@ -85,8 +93,8 @@ public class ASternSuche {
     }
 
     private void berechneNachfolger(Feld neuesFeld, Knoten vorgaenger) {
-        //Wenn Risiko des Feldes zu hoch: abbrechen
-        if (neuesFeld.getRisiko() > 69)
+        //Wenn Risiko des Feldes zu hoch oder nicht in Map: abbrechen
+        if (neuesFeld.getRisiko() > 69)// || !welt.isInMap(neuesFeld.getPosition()[0],neuesFeld.getPosition()[1]))
             return;
 
         //Erzeuge Nachfolgerknoten
@@ -102,7 +110,7 @@ public class ASternSuche {
         this.fuegeKnotenEin(nachfolger);
     }
 
-    private int berechneEntfernung(Knoten aktKnoten){
-        return Math.abs(aktKnoten.getFeld().getPosition()[0]-ziel.getPosition()[0]) + Math.abs(aktKnoten.getFeld().getPosition()[1]-ziel.getPosition()[1]);
+    private int berechneEntfernung(Knoten aktKnoten) {
+        return Math.abs(aktKnoten.getFeld().getPosition()[0] - ziel.getPosition()[0]) + Math.abs(aktKnoten.getFeld().getPosition()[1] - ziel.getPosition()[1]);
     }
 }

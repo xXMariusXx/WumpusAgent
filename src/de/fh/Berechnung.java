@@ -21,7 +21,7 @@ public class Berechnung {
         }
 
         //wenn aktuell ein Zielfeld gegeben ist: hin laufen
-        if (aktuellesZielfeld.getPosition()[0] > -1 && aktuellesZielfeld.getPosition()[1] > -1 && welt.isInMap(aktuellesZielfeld.getPosition()[0], aktuellesZielfeld.getPosition()[1])) {
+        if (aktuellesZielfeld.getPosition()[0] > -1 && aktuellesZielfeld.getPosition()[1] > -1) {
             nextAction = bestimmeWegZumFeld();
         }
         //wenn aktuell kein Ziel gegeben (d.h jedes Feld mit geringem Risiko besucht und Gold nicht gefunden) Werte: (-1, -1)
@@ -86,7 +86,7 @@ public class Berechnung {
         }
 
 
-        System.err.println("Fehler bei Wegbestimmung, Zwischenziel liegt in in der Nähe des Hunters");
+        System.err.println("Fehler bei Wegbestimmung, Zwischenziel liegt nicht in der Nähe des Hunters");
         return null;
     }
 
@@ -95,9 +95,10 @@ public class Berechnung {
 
         ASternSuche aStern = new ASternSuche(aktHunterPos, aktuellesZielfeld, welt);
         Feld res = aStern.suche();
+        System.out.println("Nächstes Zwischenfeld: " + res);
 
-        if(res.getPosition()[0] != -1 && res.getPosition()[1] != -1){
-            return aStern.suche();
+        if (res.getPosition()[0] != -1 && res.getPosition()[1] != -1) {
+            return res;
         }
 
 
@@ -110,16 +111,19 @@ public class Berechnung {
         //wenn Gold bereits aufgesammelt ist, zurück zum Start
         if (welt.isGoldAufgesammelt()) {
             aktuellesZielfeld = welt.getFeld(1, 1);
+            System.err.println("Gold gefunden! " + aktuellesZielfeld);
         }
 
         //nächstes unbekanntes Feld suchen
         Feld f = sucheNaechstesUnbekanntes(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
+        System.out.println("aktuelles Zielfeld:" + f);
         aktuellesZielfeld = f;
 
 
     }
 
     private Feld sucheNaechstesUnbekanntes(int x, int y, int maxRisiko) {
+
         //Schleife für Schrittweite
         for (int m = 1; m < Math.max(welt.mapSize()[0], welt.mapSize()[1]); m++) {
 
@@ -168,6 +172,12 @@ public class Berechnung {
                 }
             }
         }
+
+        if (!welt.isUmrandet()) {
+            return welt.getFeld(welt.getHunterPos()[0]+1, welt.getHunterPos()[1]);
+        }
+
+
         System.err.println("Kein unbekanntes Feld mehr vorhanden oder Risiko zu groß!");
         return new Feld(Feld.Zustand.UNBEKANNT, -1, -1);
     }

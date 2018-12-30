@@ -24,6 +24,7 @@ public class Welt {
     private boolean goldAufgesammelt = false;
     private boolean wumpusLebendig = true;
     private int punkte = 1000;
+    private boolean umrandet = false;
 
 
     enum Himmelsrichtung {
@@ -111,8 +112,14 @@ public class Welt {
     }
 
     public Feld getFeld(int x, int y){
-        if(x>=map[0].length || y>=map.length) return new Feld(UNBEKANNT,x,y);
-        return map[y][x];
+        if(x>=0 && y>=0 && x<map[0].length && y<map.length) return map[y][x];
+        //ToDo: map nicht vergrößern wenn x,y außerhalb der Außenwände
+        if((x>=map[0].length || y>=map.length) && x>= 0 && y>=0) {
+            addZustand(x,y,UNBEKANNT);
+            return map[y][x];
+        }
+        return new Feld(UNBEKANNT,-55,-55);
+
     }
 
     public boolean isInMap(int x, int y){
@@ -160,7 +167,6 @@ public class Welt {
         addZustand(x, y, HUNTER);
         hunterPos[0] = x;
         hunterPos[1] = y;
-        map[y][x].setBesucht();
     }
 
     public int[] getHunterPos() {
@@ -200,6 +206,31 @@ public class Welt {
 
     public boolean isGoldAufgesammelt() {
         return goldAufgesammelt;
+    }
+
+    public boolean isUmrandet() {
+        if (umrandet) return true;
+        int maxX = 0;
+        int maxY = 0;
+
+        for(int i = 0; i<map[0].length;i++){
+            if (getFeld(i,0).getZustaende().contains(WALL)) maxX = i;
+        }
+
+        for(int i = 0; i<map.length;i++){
+            if (getFeld(0,i).getZustaende().contains(WALL)) maxY = i;
+        }
+
+        for(int i = 0;i<=maxX;i++) {
+            if (!getFeld(i,maxY).getZustaende().contains(WALL)) return false;
+        }
+
+        for(int i = 0;i<=maxY;i++) {
+            if (!getFeld(maxX,i).getZustaende().contains(WALL)) return false;
+        }
+
+        umrandet = true;
+        return true;
     }
 
     // ---- Debug Zeugs ----
