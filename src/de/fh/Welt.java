@@ -42,10 +42,10 @@ public class Welt {
         nextActionList = new LinkedList<HunterAction>();
         lastActionList = new LinkedList<HunterAction>();
 
-        map[0][0] = new Feld(WALL);
-        map[0][1] = new Feld(WALL);
-        map[1][0] = new Feld(WALL);
-        map[1][1] = new Feld(HUNTER);
+        map[0][0] = new Feld(WALL,0,0);
+        map[0][1] = new Feld(WALL,1,0);
+        map[1][0] = new Feld(WALL,0,1);
+        map[1][1] = new Feld(HUNTER,1,1);
         hunterPos[0] = 1;
         hunterPos[1] = 1;
         blickrichtung = Himmelsrichtung.EAST;
@@ -75,11 +75,11 @@ public class Welt {
             //automatisch mit-angelegte Felder erzeugen
             for (int a = 0; a < tmp.length; a++) {
                 for (int b = 0; b < tmp[0].length; b++) {
-                    tmp[a][b] = new Feld(new HashSet<Zustand>());
+                    tmp[a][b] = new Feld(new HashSet<Zustand>(),b,a);
                 }
             }
             //neuen Zustand speichern
-            tmp[y][x] = new Feld(z);
+            tmp[y][x] = new Feld(z,x,y);
             //Map kopieren
             for (int i = 0; i < map.length; i++) {
                 for (int j = 0; j < map[0].length; j++) {
@@ -95,7 +95,10 @@ public class Welt {
     }
 
     public void removeZustand(int x, int y, Zustand z) {
-        map[y][x].removeZustand(z);
+        if(x<map[0].length && y<map.length && x>=0 && y>=0){
+            map[y][x].removeZustand(z);
+        }
+
     }
 
     public void wandErgaenzen() {
@@ -108,25 +111,12 @@ public class Welt {
     }
 
     public Feld getFeld(int x, int y){
-        if(x>=map[0].length || y>=map.length) return new Feld(UNBEKANNT);
+        if(x>=map[0].length || y>=map.length) return new Feld(UNBEKANNT,x,y);
         return map[y][x];
     }
 
-    public int[] getFeldPos(Feld f){
-        int[] res = new int[2];
-        res[0] = -1;
-        res[1] = -1;
-        for (int i = 0; i < map.length ; i++) {
-            for (int j = 0; j < map[0].length ; j++) {
-                if (map[i][j] == f){
-                    res[0] = j;
-                    res[1] = i;
-                    return res;
-                }
-
-            }
-        }
-        return res;
+    public boolean isInMap(int x, int y){
+        return (x<map[0].length && y<map.length && x>=0 && y>=0);
     }
 
 
@@ -201,6 +191,9 @@ public class Welt {
         anzahlPfeile--;
     }
 
+    public boolean isGoldAufgesammelt() {
+        return goldAufgesammelt;
+    }
 
     // ---- Debug Zeugs ----
 

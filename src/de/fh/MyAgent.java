@@ -62,9 +62,6 @@ public class MyAgent extends WumpusHunterAgent {
         this.updateHunterStats();
 
 
-        // ---- Gestank auswerten ----
-        this.gestankAuswerten();
-
         // ---- Wind auswerten ----
         if (percept.isBreeze()) {
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], WIND);
@@ -72,11 +69,24 @@ public class MyAgent extends WumpusHunterAgent {
             welt.addZustand(welt.getHunterPos()[0]-1, welt.getHunterPos()[1], EVTFALLE);
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]+1, EVTFALLE);
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]-1, EVTFALLE);
+
+            //ToDo prüfen ob Falle genauer eingegrenzt werden kann!
         }
 
         // ---- Gold setzen ----
         if (percept.isGlitter()) {
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], GOLD);
+        }
+
+        // ---- Gestank zurücksetzen wenn Wumpus sich bewegt hat ----
+        if (percept.isRumble() && !stenchRadar.isEmpty()) {
+            this.gestankLoeschen();
+        }
+
+        // ---- Gestank auswerten ----
+        if (!stenchRadar.isEmpty()) {
+            this.gestankAuswerten();
+            //ToDo Eventuelle Wumpus Position ermitteln und setzen
         }
 
 
@@ -181,14 +191,20 @@ public class MyAgent extends WumpusHunterAgent {
      */
     @Override
     public HunterAction action() {
-
         // 2. -----NÄCHSTEN SCHRITT PLANEN-----
-        berechnung.berechne();
+
+        if(percept.isGlitter()){
+            welt.addNextAction(HunterAction.GRAB);
+        }
+        else{
+            berechnung.berechne();
+        }
 
 
-        HunterAction hunterAction = welt.getNextAction();
+
+        HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
-        return hunterAction;
+        return nextHunterAction;
     }
 
 
@@ -273,7 +289,6 @@ public class MyAgent extends WumpusHunterAgent {
     }
 
     private void gestankAuswerten() {
-        if (!stenchRadar.isEmpty()) {
             for (Map.Entry<Integer, Integer> g : stenchRadar.entrySet()) {
                 switch (g.getValue()) {
                     case 1:
@@ -308,6 +323,35 @@ public class MyAgent extends WumpusHunterAgent {
                         break;
                 }
             }
-        }
+
+    }
+
+    private void gestankLoeschen(){
+        welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], GESTANK1);
+        welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], GESTANK1);
+        welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, GESTANK1);
+        welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, GESTANK1);
+
+        welt.removeZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1], GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1], GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 2, GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 2, GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] + 1, GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 1, GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 1, GESTANK2);
+        welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 1, GESTANK2);
+
+        welt.removeZustand(welt.getHunterPos()[0] + 3, welt.getHunterPos()[1], GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] - 3, welt.getHunterPos()[1], GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 3, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 3, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1] + 1, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1] - 1, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1] + 1, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1] - 1, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] + 2, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 2, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 2, GESTANK3);
+        welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 2, GESTANK3);
     }
 }

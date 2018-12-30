@@ -8,21 +8,28 @@ public class Feld {
     private HashSet<Zustand> set;
     private int risiko;
     private boolean besucht = false;
+    private int[] position;
+
 
 
     //Zustand Enum
     enum Zustand {
         HUNTER(39),
+
         WALL(99),
-        UNBEKANNT(7),
+
+        UNBEKANNT(9),
         FREI(10),
-        WIND(30),
-        GESTANK1(90),
-        GESTANK2(42),
-        GESTANK3(25),
-        EVTFALLE(70),
-        FALLE(100),
-        GOLD(1);
+        GOLD(1),
+
+        GESTANK1(86),
+        GESTANK2(46),
+        GESTANK3(26),
+
+        WIND(31),
+        EVTFALLE(71),
+        FALLE(100);
+
 
         private final int bewertung;
 
@@ -37,13 +44,20 @@ public class Feld {
 
 
     //Konstruktoren
-    public Feld(HashSet<Zustand> tmp) {
+    public Feld(HashSet<Zustand> tmp, int x, int y) {
         set = tmp;
+        position = new int[2];
+        position[0] = x;
+        position[1] = y;
+
     }
 
-    public Feld(Zustand z) {
+    public Feld(Zustand z, int x, int y) {
         set = new HashSet<Zustand>();
         set.add(z);
+        position = new int[2];
+        position[0] = x;
+        position[1] = y;
     }
 
 
@@ -101,6 +115,13 @@ public class Feld {
         return besucht;
     }
 
+    public int[] getPosition() {
+        return position;
+    }
+
+    public void setPosition(int[] position) {
+        this.position = position;
+    }
 
     //Interne Methoden
     private void berechneRisiko() {
