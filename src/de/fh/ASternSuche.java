@@ -1,11 +1,7 @@
-package de.fh.suche;
-
-import de.fh.Feld;
-import de.fh.Welt;
+package de.fh;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 
 public class ASternSuche {
     private Feld start;
@@ -24,14 +20,41 @@ public class ASternSuche {
         closeList = new HashSet<>();
     }
 
-    //Wenn erfolgreich, wird
+    //Wenn erfolgreich, wird der Nachfolger vom Start zurück gegeben
     public Feld suche() {
-        return null;
+        this.fuegeKnotenEin(new Knoten(start));
+        //Solange noch Expansionskandidaten vorhanden (Mindestens die Wurzel)
+        while (!openList.isEmpty()) {
+
+            //Es wird *immer* der erste Knoten aus der Openlist entnommen
+            //Die Sortierung der Openlist bestimmt die Suche
+            Knoten expansionsKandidat = this.openList.remove(0);
+            //Wird ein Knoten aus der Openlist entfernt landet dieser sofort in der Closelist, damit dieser nicht noch einmal expandiert wird
+            this.closeList.add(expansionsKandidat.hashCode());
+
+            //Schaue ob Knoten Ziel ist
+            if (expansionsKandidat.isZiel(ziel)) {
+                //Kandidat entspricht dem geünschten Zielzustand
+                Knoten loesungsKnoten = expansionsKandidat;
+                while (loesungsKnoten.getVorgaenger() != null)
+                {
+                    loesungsKnoten = loesungsKnoten.getVorgaenger();
+                }
+                return loesungsKnoten.getFeld();
+            } else {
+                //Ist nicht gleich dem Zielzustand, also expandiere nächsten Knoten
+                expandiereKnoten(expansionsKandidat);
+
+            }
+        }
+
+        //Keine Lösung gefunden
+        return new Feld(Feld.Zustand.UNBEKANNT,-1,-1);
     }
 
     public void bewerteKnoten(Knoten expansionsKandidat) {
 
-        int schaetzwert, pfadkosten = 15;
+        int schaetzwert, pfadkosten = 10; //je höher die Pfadkosten gesetzt werden, desto mehr Risiko wird eingegangen
 
         //möglich geringe Entfernung zum Ziel und geringes Risiko
         schaetzwert = expansionsKandidat.getFeld().getRisiko() + berechneEntfernung(expansionsKandidat);
@@ -50,8 +73,6 @@ public class ASternSuche {
             }
             pos++;
         }
-
-        //Implementiert openList.add(Index,exp) mit dem richtigen Index gemäß Suchstrategie
         openList.add(pos, expansionsKandidat);
 
     }

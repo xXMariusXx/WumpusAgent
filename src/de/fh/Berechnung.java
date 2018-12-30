@@ -1,10 +1,6 @@
 package de.fh;
 
-import de.fh.suche.ASternSuche;
 import de.fh.wumpus.enums.HunterAction;
-import de.fh.wumpus.enums.HunterActionEffect;
-
-import java.util.*;
 
 public class Berechnung {
     private Welt welt;
@@ -85,6 +81,8 @@ public class Berechnung {
                 case SOUTH:
                     return HunterAction.TURN_RIGHT;
             }
+        } else if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
+            return HunterAction.SIT;
         }
 
 
@@ -92,16 +90,19 @@ public class Berechnung {
         return null;
     }
 
-    private Feld bestimmeNaechstesZwischenFeld()
-
-    {
+    private Feld bestimmeNaechstesZwischenFeld() {
         Feld aktHunterPos = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]);
-        ASternSuche aStern = new ASternSuche(aktHunterPos,aktuellesZielfeld, welt);
-        Feld zwischenZiel = aStern.suche();
+
+        ASternSuche aStern = new ASternSuche(aktHunterPos, aktuellesZielfeld, welt);
+        Feld res = aStern.suche();
+
+        if(res.getPosition()[0] != -1 && res.getPosition()[1] != -1){
+            return aStern.suche();
+        }
 
 
         System.err.println("Keinen Weg zum Ziel gefunden");
-        return zwischenZiel;
+        return null;
     }
 
     private void bestimmeNaechstesZielFeld() {

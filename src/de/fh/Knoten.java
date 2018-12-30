@@ -1,28 +1,26 @@
-package de.fh.suche;
-
-import de.fh.Feld;
+package de.fh;
 
 public class Knoten {
 
     private Feld feld;
-    protected Knoten vorgaenger;
-    protected int pfadkosten = 0; //zurückgelegte Strecke bis zu diesem Feld
-    protected int schaetzwert = 0; //restliche Entfernung zum Ziel + Risiko
-    private int[] startPos;
+    private Knoten vorgaenger;
+    private int pfadkosten = 0; //zurückgelegte Strecke bis zu diesem Feld
+    private int schaetzwert = 0; //restliche Entfernung zum Ziel + Risiko
 
 
-
-    public Knoten(Feld feld, Knoten vorgaenger){
+    //Konstruktor für Nachfolgeknoten
+    public Knoten(Feld feld, Knoten vorgaenger) {
         this.vorgaenger = vorgaenger;
         this.feld = feld;
     }
 
     //Konstruktor für Startfeld
-    public Knoten(Feld feld){
+    public Knoten(Feld feld) {
         this.vorgaenger = null;
         this.feld = feld;
     }
 
+    //Getter-Setter
     public Feld getFeld() {
         return feld;
     }
@@ -39,28 +37,20 @@ public class Knoten {
         return vorgaenger;
     }
 
-    public void setSchaetzwert(int schaetzwert){
+    public void setSchaetzwert(int schaetzwert) {
         this.schaetzwert = schaetzwert;
     }
 
-    public int getSchaetzwert(){
+    public int getSchaetzwert() {
         return this.schaetzwert;
     }
 
-    public int getBewertung(){
+    public int getBewertung() {
         return pfadkosten + schaetzwert;
     }
 
-
-
-    /**
-     * Ist der Konten der Zielzustand
-     *
-     * @param knoten
-     * @return
-     */
-    public boolean isZiel(Knoten knoten) {
-       return this.feld == knoten.feld;
+    public boolean isZiel(Feld feld) {
+        return this.feld == feld;
     }
 
 
