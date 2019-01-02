@@ -14,8 +14,10 @@ public class Welt {
     private Feld[][] map; //1. Wert = Y (Zeile), 2. Wert = X (Spalte)
 
 
-    //TODO -Außengrenzen festlegen für möglichen Wumpus
-    //TODO -automatische Randmauern
+    //TODO -Wumpus und Feld genauer bestimmen
+    //ToDo -Schießen
+    //ToDo - Punktestand
+    // Todo kontrollausgaben
 
     // ---- Hunter Stats ----
     private int[] hunterPos = new int[2]; //[0] = X-Wert, [1] = Y-Wert
@@ -59,7 +61,7 @@ public class Welt {
     }
 
     public void addZustand(int x, int y, Zustand z) {
-        if (x <= 0 || y <= 0) return;
+        if (x <= 0 || y <= 0 || ((x >= map[0].length || y >= map.length) && isUmrandet())) return;
         //Map automatisch vergrößern, wenn Feld noch nicht vorhanden
         if (x >= map[0].length || y >= map.length) {
             umrandet = false;
@@ -94,9 +96,11 @@ public class Welt {
             map[y][x].addZustand(z);
         }
 
-        if (getFeld(x,y).isBesucht()){
+        //Wenn Hunter sich bewegt hat nach Möglichkeit weitere Wände ergänzen
+        if (z == HUNTER) {
             this.wandErgaenzen();
         }
+        checkWumpusWandGefahr(x,y,z);
 
 
     }
@@ -108,61 +112,81 @@ public class Welt {
 
     }
 
-    private int wandGrenzeX(){
+    public void checkWumpusWandGefahr(int x, int y, Zustand z) {
+        //Wenn Gestank 1 Feld entfernt von einer Wand gesetzt werden soll, riskante Felder markieren
+        if (z == GESTANK3 || z == GESTANK2 || z == GESTANK1) {
+            if (getFeld(x, y - 2).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y - 1, EVTWUMPUS);
+                addZustand(x + 1, y - 1, EVTWUMPUS);
+            }
+            if (getFeld(x, y + 2).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y + 1, EVTWUMPUS);
+                addZustand(x + 1, y + 1, EVTWUMPUS);
+            }
+            if (getFeld(x+2, y).getZustaende().contains(WALL)) {
+                addZustand(x + 1, y - 1, EVTWUMPUS);
+                addZustand(x + 1, y + 1, EVTWUMPUS);
+            }
+            if (getFeld(x-2, y - 2).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y - 1, EVTWUMPUS);
+                addZustand(x - 1, y + 1, EVTWUMPUS);
+            }
+        }
+    }
+
+    public int wandGrenzeX() {
         int maxX = 0;
         //X Wert bis wohin die Map aus Wand besteht
 
         for (int i = 0; i < map[0].length; i++) {
-            if (getFeld(i, 0).getZustaende().contains(WALL)){
+            if (getFeld(i, 0).getZustaende().contains(WALL)) {
                 maxX++;
-                return maxX;
             }
         }
-        return maxX;
+        //-1 damit es mit den Index Werten übereinstimmt
+        return maxX - 1;
     }
 
-    private int wandGrenzeY(){
+    public int wandGrenzeY() {
         int maxY = 0;
         //Y Wert bis wohin die Map aus Wand besteht
         for (int i = 0; i < map.length; i++) {
-            if (getFeld(0, i).getZustaende().contains(WALL)){
+            if (getFeld(0, i).getZustaende().contains(WALL)) {
                 maxY++;
-                return maxY;
             }
         }
-        return maxY;
+        //-1 damit es mit den Index Werten übereinstimmt
+        return maxY - 1;
     }
 
     public void wandErgaenzen() {
-            System.out.println("Wand wird ergänzt!");
-             int maxX = wandGrenzeX();
-             int maxY = wandGrenzeY();
-            //fehlende Umrandung auf X und Y Achse ergänzen, wenn Map vergrößert wird.
-            map[0][maxX+1].addZustand(WALL);
-            map[maxY+1][0].addZustand(WALL);
+        int maxX = wandGrenzeX();
+        int maxY = wandGrenzeY();
+        //fehlende Umrandung auf X und Y Achse ergänzen, wenn Map vergrößert wird.
+        if (isInMap(maxX + 1, 0)) map[0][maxX + 1].addZustand(WALL);
+        if (isInMap(0, maxY + 1)) map[maxY + 1][0].addZustand(WALL);
 
 
-            //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
-            if ((map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
-                    && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
-                //Zeile auf Höhe maxY vervollständigen
-                for (int i = 0; i <= maxX; i++) {
-                    addZustand(i, maxY, WALL);
-                }
-                //Spalte maxX vervollständigen
-                for (int i = 0; i <= maxY; i++) {
-                    addZustand(maxX, i, WALL);
-                }
+        //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
+        if (maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
+                && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
+            //Zeile auf Höhe maxY vervollständigen
+            for (int i = 0; i <= maxX; i++) {
+                addZustand(i, maxY, WALL);
             }
+            //Spalte maxX vervollständigen
+            for (int i = 0; i <= maxY; i++) {
+                addZustand(maxX, i, WALL);
+            }
+        }
     }
 
     public boolean isUmrandet() {
         int maxX = wandGrenzeX();
         int maxY = wandGrenzeY();
-        System.out.println("maxX und maxY aus isUmrandet: " + maxX + "," + maxY);
 
         for (int i = 0; i <= maxX; i++) {
-            if (!getFeld(i, maxY).getZustaende().contains(WALL)){
+            if (!getFeld(i, maxY).getZustaende().contains(WALL)) {
                 umrandet = false;
                 return umrandet;
             }
@@ -181,10 +205,10 @@ public class Welt {
 
     public Feld getFeld(int x, int y) {
         if (x >= 0 && y >= 0 && x < map[0].length && y < map.length) return map[y][x];
-        //ToDo: map nicht vergrößern wenn x,y außerhalb der Außenwände
-        if ((x >= map[0].length || y >= map.length) && x >= 0 && y >= 0) {
+        //map vergrößern solange sie noch nicht umrandet ist, falls das geforderte Feld nicht innerhalb der Map liegt
+        if ((x >= map[0].length || y >= map.length) && x >= 0 && y >= 0 && !isUmrandet()) {
             addZustand(x, y, UNBEKANNT);
-            return map[y][x];
+            return getFeld(x, y);
         }
         return new Feld(UNBEKANNT, -55, -55);
 
@@ -205,7 +229,7 @@ public class Welt {
     // ---- Aktion Zeugs ----
     public HunterAction getLastAction() {
         //System.out.println(lastActionList);
-        return lastActionList.removeLast();
+        return lastActionList.getLast();
     }
 
     public void addNextAction(HunterAction a) {
@@ -287,7 +311,8 @@ public class Welt {
                         System.out.print("[00" + risiko + "] ");
                         break;
                     case 2:
-                        System.out.print("[0" + risiko + "] ");
+                        if (risiko == 39) System.out.print("[-H-] ");
+                        else System.out.print("[0" + risiko + "] ");
                         break;
 
                     default:

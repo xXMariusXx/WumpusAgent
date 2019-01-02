@@ -41,10 +41,6 @@ public class Knoten {
         this.schaetzwert = schaetzwert;
     }
 
-    public int getSchaetzwert() {
-        return this.schaetzwert;
-    }
-
     public int getBewertung() {
         return pfadkosten + schaetzwert;
     }

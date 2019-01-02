@@ -17,17 +17,18 @@ public class Feld {
 
         WALL(99),
 
-        UNBEKANNT(5),
+        UNBEKANNT(7),
         FREI(10),
         GOLD(1),
 
         GESTANK1(86),
         GESTANK2(46),
         GESTANK3(26),
+        EVTWUMPUS(70),
 
         WIND(31),
-        EVTFALLE(71),
-        FALLE(100);
+        EVTFALLE(91),
+        FALLE(99);
 
 
         private final int bewertung;
@@ -68,17 +69,26 @@ public class Feld {
                 //wenn schon stärkerer Gestank vorhanden ist, muss der schwächere nicht hinzugefügt werden
                 if (set.contains(Zustand.GESTANK2)) set.remove(Zustand.GESTANK2);
                 if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
+                if (isBesucht()){
+                    set.add(Zustand.GESTANK2);
+                    return;
+                }
                 set.add(z);
                 break;
 
             case GESTANK2:
                 if (set.contains(Zustand.GESTANK1)) break;
                 if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
+                if (isBesucht()){
+                    set.add(Zustand.GESTANK1);
+                    return;
+                }
                 set.add(z);
                 break;
 
             case GESTANK3:
                 if (set.contains(Zustand.GESTANK3) || set.contains(Zustand.GESTANK2)) break;
+                if (isBesucht()) return;
                 set.add(z);
                 break;
 
@@ -103,6 +113,7 @@ public class Feld {
             default:
                 set.add(z);
         }
+        set.remove(Zustand.UNBEKANNT);
 
     }
 

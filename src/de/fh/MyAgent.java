@@ -266,7 +266,9 @@ public class MyAgent extends WumpusHunterAgent {
                     }
                     break;
             }
+            welt.removeLastAction();
         } else if (actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
+            welt.wandErgaenzen();
             berechnung.setModus("checkEcke");
             welt.removeLastAction();
             switch (welt.getBlickrichtung()) {
@@ -356,5 +358,11 @@ public class MyAgent extends WumpusHunterAgent {
         welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 2, GESTANK3);
         welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 2, GESTANK3);
         welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 2, GESTANK3);
+        for(int i = 0; i<welt.wandGrenzeX();i++){
+            for (int j = 0; j < welt.wandGrenzeY() ; j++) {
+                welt.removeZustand(i,j,EVTWUMPUS);
+
+            }
+        }
     }
 }

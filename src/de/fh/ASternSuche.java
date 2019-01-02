@@ -7,6 +7,9 @@ public class ASternSuche {
     private Feld start;
     private Feld ziel;
     private Welt welt;
+    private int risiko;
+    private int faktorEntfernung;
+    private boolean debug = false;
 
     private ArrayList<Knoten> openList;
     private HashSet<Integer> closeList;
@@ -15,21 +18,33 @@ public class ASternSuche {
         this.start = start;
         this.ziel = ziel;
         this.welt = welt;
+        if (true) System.out.println("Startfeld:    " + start);
+        if (true) System.out.println("Zielfeld:     " + ziel);
 
-        openList = new ArrayList<>();
-        closeList = new HashSet<>();
     }
 
     //Wenn erfolgreich, wird der Nachfolger vom Start zurück gegeben
-    public Feld suche() {
-        System.out.println("Startfeld:    " + start);
-        System.out.println("Zielfeld:     " + ziel);
+    public Feld suche(int risiko, int faktorEntfernung) {
+        this.risiko = risiko;
+        this.faktorEntfernung = faktorEntfernung;
+        openList = new ArrayList<>();
+        closeList = new HashSet<>();
+
+        if (debug) System.out.println("A* mit: " + risiko + ", " + faktorEntfernung);
+        //Such-Algorithmus
         if (start != ziel) {
             this.fuegeKnotenEin(new Knoten(start));
 
             //Solange noch Expansionskandidaten vorhanden (Mindestens die Wurzel)
             while (!openList.isEmpty()) {
+                if (debug) System.out.println("---openList---");
+                if(debug) {
+                    for(int i = 0; i<openList.size() && i<5;i++){
+                        System.out.println(openList.get(i).getFeld() + " Bewertung: " + openList.get(i).getBewertung());
+                    }
 
+                }
+                if (debug) System.out.println("---ENDE openList---");
                 //Es wird *immer* der erste Knoten aus der Openlist entnommen
                 //Die Sortierung der Openlist bestimmt die Suche
                 Knoten expansionsKandidat = this.openList.remove(0);
@@ -55,17 +70,16 @@ public class ASternSuche {
             }
         }
 
-
         //Keine Lösung gefunden
         return new Feld(Feld.Zustand.UNBEKANNT, -1, -1);
     }
 
     public void bewerteKnoten(Knoten expansionsKandidat) {
 
-        int schaetzwert, pfadkosten = 10; //je höher die Pfadkosten gesetzt werden, desto unwichtiger der Schätzwert
+        int schaetzwert, pfadkosten = 5; //je höher die Pfadkosten gesetzt werden, desto unwichtiger der Schätzwert
 
         //möglich geringe Entfernung zum Ziel und geringes Risiko
-        schaetzwert = expansionsKandidat.getFeld().getRisiko() + 4 * berechneEntfernung(expansionsKandidat); //je höher der Faktor des unwichtiger das Risiko
+        schaetzwert = expansionsKandidat.getFeld().getRisiko() + faktorEntfernung * berechneEntfernung(expansionsKandidat); //je höher der Faktor desto unwichtiger das Risiko
         expansionsKandidat.setSchaetzwert(schaetzwert);
 
         //setzt die bisherigen Pfadkosten zu dem Knoten
@@ -86,25 +100,46 @@ public class ASternSuche {
     }
 
     private void expandiereKnoten(Knoten f) {
-        berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
-        berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]), f);
-        berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
-        berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
+        if (welt.isUmrandet()) {
+            if (welt.isInMap(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]))
+                berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
+            if (welt.isInMap(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]))
+                berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]), f);
+            if (welt.isInMap(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1))
+                berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
+            if (welt.isInMap(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1))
+                berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
+        } else {
+            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
+            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]), f);
+            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
+            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
+        }
+
+
     }
 
     private void berechneNachfolger(Feld neuesFeld, Knoten vorgaenger) {
-        //Wenn Risiko des Feldes zu hoch oder nicht in Map: abbrechen
-        if (neuesFeld.getRisiko() > 69 || (!welt.isInMap(neuesFeld.getPosition()[0],neuesFeld.getPosition()[1]))){
+        //Wenn Risiko des Feldes zu hoch: abbrechen
+        if (neuesFeld.getRisiko() > risiko || !welt.isInMap(neuesFeld.getPosition()[0], neuesFeld.getPosition()[1]))
             return;
-        }
+
+        if(berechneEntfernung(new Knoten(neuesFeld)) > berechneEntfernung(new Knoten(start))+8) return;
 
 
         //Erzeuge Nachfolgerknoten
         Knoten nachfolger = new Knoten(neuesFeld, vorgaenger);
 
         //Wenn Feld bereits in closeList, also schon getestet: nicht hinzufügen
-        if (closeList.contains(nachfolger.hashCode()))
+        if (closeList.contains(nachfolger.hashCode())){
+            //System.out.println("Knoten wurde nicht hinzugefügt da bereits in Closelist");
             return;
+        }
+
+        for (Knoten k: openList) {
+            if(k.hashCode() == nachfolger.hashCode()) return;
+        }
+
 
         //Knoten bewerten
         this.bewerteKnoten(nachfolger);
