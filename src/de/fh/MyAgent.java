@@ -98,6 +98,7 @@ public class MyAgent extends WumpusHunterAgent {
         System.out.println("Risiko-Tabelle");
         welt.displayRisiko();
         System.out.println();
+        System.out.println("Action Effekt: " + actionEffect);
 
         //Gib alle riechbaren Wumpis aus
         if (!stenchRadar.isEmpty()) {
@@ -204,7 +205,7 @@ public class MyAgent extends WumpusHunterAgent {
 
         HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
-        System.out.println(nextHunterAction);
+        System.out.println("Nächste Aktion: " + nextHunterAction);
         return nextHunterAction;
     }
 
@@ -266,6 +267,7 @@ public class MyAgent extends WumpusHunterAgent {
                     break;
             }
         } else if (actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
+            berechnung.setModus("checkEcke");
             welt.removeLastAction();
             switch (welt.getBlickrichtung()) {
                 case EAST:

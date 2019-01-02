@@ -22,8 +22,8 @@ public class ASternSuche {
 
     //Wenn erfolgreich, wird der Nachfolger vom Start zurück gegeben
     public Feld suche() {
-        System.out.println("start Feld: " + start);
-        System.out.println("ziel Feld: " + ziel);
+        System.out.println("Startfeld:    " + start);
+        System.out.println("Zielfeld:     " + ziel);
         if (start != ziel) {
             this.fuegeKnotenEin(new Knoten(start));
 
@@ -33,7 +33,7 @@ public class ASternSuche {
                 //Es wird *immer* der erste Knoten aus der Openlist entnommen
                 //Die Sortierung der Openlist bestimmt die Suche
                 Knoten expansionsKandidat = this.openList.remove(0);
-                System.out.println("herausgenommenes Feld:" + expansionsKandidat.getFeld());
+                //System.out.println("herausgenommenes Feld:" + expansionsKandidat.getFeld());
                 //Wird ein Knoten aus der Openlist entfernt landet dieser sofort in der Closelist, damit dieser nicht noch einmal expandiert wird
                 this.closeList.add(expansionsKandidat.hashCode());
 
@@ -94,8 +94,10 @@ public class ASternSuche {
 
     private void berechneNachfolger(Feld neuesFeld, Knoten vorgaenger) {
         //Wenn Risiko des Feldes zu hoch oder nicht in Map: abbrechen
-        if (neuesFeld.getRisiko() > 69)// || !welt.isInMap(neuesFeld.getPosition()[0],neuesFeld.getPosition()[1]))
+        if (neuesFeld.getRisiko() > 69 || (!welt.isInMap(neuesFeld.getPosition()[0],neuesFeld.getPosition()[1]))){
             return;
+        }
+
 
         //Erzeuge Nachfolgerknoten
         Knoten nachfolger = new Knoten(neuesFeld, vorgaenger);

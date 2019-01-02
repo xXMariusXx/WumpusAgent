@@ -17,7 +17,7 @@ public class Feld {
 
         WALL(99),
 
-        UNBEKANNT(9),
+        UNBEKANNT(5),
         FREI(10),
         GOLD(1),
 
@@ -65,6 +65,7 @@ public class Feld {
     public void addZustand(Zustand z) {
         switch (z) {
             case GESTANK1:
+                //wenn schon stärkerer Gestank vorhanden ist, muss der schwächere nicht hinzugefügt werden
                 if (set.contains(Zustand.GESTANK2)) set.remove(Zustand.GESTANK2);
                 if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
                 set.add(z);
@@ -83,6 +84,7 @@ public class Feld {
 
             case WALL:
                 set.add(z);
+                //Wand muss nicht vom Hunter betreten werden, daher auf "besucht" gesetzt
                 setBesucht();
                 break;
 
@@ -92,6 +94,7 @@ public class Feld {
                 break;
 
             case EVTFALLE:
+                //wenn Feld schon besucht, kann es keine Falle mehr sein
                 if (besucht) break;
                 set.add(z);
                 setBesucht();
@@ -138,7 +141,7 @@ public class Feld {
 
     @Override
     public String toString() {
-        return "(X,Y):" + getPosition()[0] + "," + getPosition()[1] + getZustaende() + getRisiko();
+        return getPosition()[0] + "," + getPosition()[1] + " " + getZustaende() + " " + getRisiko();
     }
 
     //Interne Methoden

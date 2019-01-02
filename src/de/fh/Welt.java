@@ -43,10 +43,10 @@ public class Welt {
         nextActionList = new LinkedList<HunterAction>();
         lastActionList = new LinkedList<HunterAction>();
 
-        map[0][0] = new Feld(WALL,0,0);
-        map[0][1] = new Feld(WALL,1,0);
-        map[1][0] = new Feld(WALL,0,1);
-        map[1][1] = new Feld(HUNTER,1,1);
+        map[0][0] = new Feld(WALL, 0, 0);
+        map[0][1] = new Feld(WALL, 1, 0);
+        map[1][0] = new Feld(WALL, 0, 1);
+        map[1][1] = new Feld(HUNTER, 1, 1);
         hunterPos[0] = 1;
         hunterPos[1] = 1;
         blickrichtung = Himmelsrichtung.EAST;
@@ -62,7 +62,7 @@ public class Welt {
         if (x <= 0 || y <= 0) return;
         //Map automatisch vergrößern, wenn Feld noch nicht vorhanden
         if (x >= map[0].length || y >= map.length) {
-
+            umrandet = false;
             Feld tmp[][];
             // Spalte hinzufügen
             if (x >= map[0].length) {
@@ -76,11 +76,11 @@ public class Welt {
             //automatisch mit-angelegte Felder erzeugen
             for (int a = 0; a < tmp.length; a++) {
                 for (int b = 0; b < tmp[0].length; b++) {
-                    tmp[a][b] = new Feld(new HashSet<Zustand>(),b,a);
+                    tmp[a][b] = new Feld(new HashSet<Zustand>(), b, a);
                 }
             }
             //neuen Zustand speichern
-            tmp[y][x] = new Feld(z,x,y);
+            tmp[y][x] = new Feld(z, x, y);
             //Map kopieren
             for (int i = 0; i < map.length; i++) {
                 for (int j = 0; j < map[0].length; j++) {
@@ -89,44 +89,112 @@ public class Welt {
             }
 
             map = tmp;
+
         } else {
             map[y][x].addZustand(z);
         }
-        this.wandErgaenzen();
+
+        if (getFeld(x,y).isBesucht()){
+            this.wandErgaenzen();
+        }
+
+
     }
 
     public void removeZustand(int x, int y, Zustand z) {
-        if(x<map[0].length && y<map.length && x>=0 && y>=0){
+        if (x < map[0].length && y < map.length && x >= 0 && y >= 0) {
             map[y][x].removeZustand(z);
         }
 
     }
 
-    public void wandErgaenzen() {
+    private int wandGrenzeX(){
+        int maxX = 0;
+        //X Wert bis wohin die Map aus Wand besteht
+
         for (int i = 0; i < map[0].length; i++) {
-            if (!map[0][i].getZustaende().contains(WALL)) map[0][i].addZustand(WALL);
+            if (getFeld(i, 0).getZustaende().contains(WALL)){
+                maxX++;
+                return maxX;
+            }
         }
-        for (int i = 0; i < map.length; i++) {
-            if (!map[i][0].getZustaende().contains(WALL)) map[i][0].addZustand(WALL);
-        }
+        return maxX;
     }
 
-    public Feld getFeld(int x, int y){
-        if(x>=0 && y>=0 && x<map[0].length && y<map.length) return map[y][x];
+    private int wandGrenzeY(){
+        int maxY = 0;
+        //Y Wert bis wohin die Map aus Wand besteht
+        for (int i = 0; i < map.length; i++) {
+            if (getFeld(0, i).getZustaende().contains(WALL)){
+                maxY++;
+                return maxY;
+            }
+        }
+        return maxY;
+    }
+
+    public void wandErgaenzen() {
+            System.out.println("Wand wird ergänzt!");
+             int maxX = wandGrenzeX();
+             int maxY = wandGrenzeY();
+            //fehlende Umrandung auf X und Y Achse ergänzen, wenn Map vergrößert wird.
+            map[0][maxX+1].addZustand(WALL);
+            map[maxY+1][0].addZustand(WALL);
+
+
+            //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
+            if ((map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
+                    && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
+                //Zeile auf Höhe maxY vervollständigen
+                for (int i = 0; i <= maxX; i++) {
+                    addZustand(i, maxY, WALL);
+                }
+                //Spalte maxX vervollständigen
+                for (int i = 0; i <= maxY; i++) {
+                    addZustand(maxX, i, WALL);
+                }
+            }
+    }
+
+    public boolean isUmrandet() {
+        int maxX = wandGrenzeX();
+        int maxY = wandGrenzeY();
+        System.out.println("maxX und maxY aus isUmrandet: " + maxX + "," + maxY);
+
+        for (int i = 0; i <= maxX; i++) {
+            if (!getFeld(i, maxY).getZustaende().contains(WALL)){
+                umrandet = false;
+                return umrandet;
+            }
+        }
+
+        for (int i = 0; i <= maxY; i++) {
+            if (!getFeld(maxX, i).getZustaende().contains(WALL)) {
+                umrandet = false;
+                return umrandet;
+            }
+        }
+
+        umrandet = true;
+        return umrandet;
+    }
+
+    public Feld getFeld(int x, int y) {
+        if (x >= 0 && y >= 0 && x < map[0].length && y < map.length) return map[y][x];
         //ToDo: map nicht vergrößern wenn x,y außerhalb der Außenwände
-        if((x>=map[0].length || y>=map.length) && x>= 0 && y>=0) {
-            addZustand(x,y,UNBEKANNT);
+        if ((x >= map[0].length || y >= map.length) && x >= 0 && y >= 0) {
+            addZustand(x, y, UNBEKANNT);
             return map[y][x];
         }
-        return new Feld(UNBEKANNT,-55,-55);
+        return new Feld(UNBEKANNT, -55, -55);
 
     }
 
-    public boolean isInMap(int x, int y){
-        return (x<map[0].length && y<map.length && x>=0 && y>=0);
+    public boolean isInMap(int x, int y) {
+        return (x < map[0].length && y < map.length && x >= 0 && y >= 0);
     }
 
-    public int[] mapSize(){
+    public int[] mapSize() {
         int[] size = new int[2];
         size[0] = map[0].length;
         size[1] = map.length;
@@ -206,31 +274,6 @@ public class Welt {
 
     public boolean isGoldAufgesammelt() {
         return goldAufgesammelt;
-    }
-
-    public boolean isUmrandet() {
-        if (umrandet) return true;
-        int maxX = 0;
-        int maxY = 0;
-
-        for(int i = 0; i<map[0].length;i++){
-            if (getFeld(i,0).getZustaende().contains(WALL)) maxX = i;
-        }
-
-        for(int i = 0; i<map.length;i++){
-            if (getFeld(0,i).getZustaende().contains(WALL)) maxY = i;
-        }
-
-        for(int i = 0;i<=maxX;i++) {
-            if (!getFeld(i,maxY).getZustaende().contains(WALL)) return false;
-        }
-
-        for(int i = 0;i<=maxY;i++) {
-            if (!getFeld(maxX,i).getZustaende().contains(WALL)) return false;
-        }
-
-        umrandet = true;
-        return true;
     }
 
     // ---- Debug Zeugs ----
