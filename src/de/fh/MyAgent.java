@@ -76,11 +76,14 @@ public class MyAgent extends WumpusHunterAgent {
         // ---- Gold setzen ----
         if (percept.isGlitter()) {
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], GOLD);
+            berechnung.setModus("goldAufnehmen");
         }
 
         // ---- Gestank zurücksetzen wenn Wumpus sich bewegt hat ----
         if (percept.isRumble() && !stenchRadar.isEmpty()) {
             this.gestankLoeschen();
+            //Wenn Wumpus sich bewegt hat, das aktuelle Zwischenfeld aber noch nicht erreicht ist, sollte eventuell ein neues Zwischenfeld berrechnet werden
+            berechnung.setZwischenfeldErreicht();
         }
 
         // ---- Gestank auswerten ----
@@ -88,7 +91,6 @@ public class MyAgent extends WumpusHunterAgent {
             this.gestankAuswerten();
             //ToDo Eventuelle Wumpus Position ermitteln und setzen
         }
-
 
 
         // -------- AKTUELLEN STAND AUSGEBEN --------
@@ -193,103 +195,108 @@ public class MyAgent extends WumpusHunterAgent {
     @Override
     public HunterAction action() {
         // 2. -----NÄCHSTEN SCHRITT PLANEN-----
-
-        if(percept.isGlitter()){
-            welt.addNextAction(HunterAction.GRAB);
-        }
-        else{
-            berechnung.berechne();
-        }
-
-
-
+        berechnung.berechne();
         HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
-        System.out.println("Nächste Aktion: " + nextHunterAction);
         return nextHunterAction;
     }
 
 
+    //Update Methoden
     private void updateHunterStats() {
+        switch (actionEffect) {
+        //ToDo setzen wo wumpus wahrscheinlich nicht ist
+            case MOVEMENT_SUCCESSFUL:
+                welt.removePunkte(1);
+                switch (welt.getLastAction()) {
+                    case GO_FORWARD:
+                        switch (welt.getBlickrichtung()) {
+                            case EAST:
+                                welt.updateHunterPos(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]);
+                                break;
+                            case WEST:
+                                welt.updateHunterPos(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]);
+                                break;
+                            case NORTH:
+                                welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1);
+                                break;
+                            case SOUTH:
+                                welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1);
+                                break;
+                        }
+                        break;
 
-        if (actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-            welt.removePunkte(1);
-            switch (welt.getLastAction()) {
-                case GO_FORWARD:
-                    switch (welt.getBlickrichtung()) {
-                        case EAST:
-                            welt.updateHunterPos(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]);
-                            break;
-                        case WEST:
-                            welt.updateHunterPos(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]);
-                            break;
-                        case NORTH:
-                            welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1);
-                            break;
-                        case SOUTH:
-                            welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1);
-                            break;
-                    }
-                    break;
+                    case TURN_RIGHT:
+                        switch (welt.getBlickrichtung()) {
+                            case SOUTH:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.WEST);
+                                break;
+                            case NORTH:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.EAST);
+                                break;
+                            case WEST:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.NORTH);
+                                break;
+                            case EAST:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.SOUTH);
+                                break;
+                        }
+                        break;
 
-                case TURN_RIGHT:
-                    switch (welt.getBlickrichtung()) {
-                        case SOUTH:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.WEST);
-                            break;
-                        case NORTH:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.EAST);
-                            break;
-                        case WEST:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.NORTH);
-                            break;
-                        case EAST:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.SOUTH);
-                            break;
-                    }
-                    break;
+                    case TURN_LEFT:
+                        switch (welt.getBlickrichtung()) {
+                            case SOUTH:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.EAST);
+                                break;
+                            case NORTH:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.WEST);
+                                break;
+                            case WEST:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.SOUTH);
+                                break;
+                            case EAST:
+                                welt.setBlickrichtung(Welt.Himmelsrichtung.NORTH);
+                                break;
+                        }
+                        break;
+                }
+                welt.removeLastAction();
+                break;
 
-                case TURN_LEFT:
-                    switch (welt.getBlickrichtung()) {
-                        case SOUTH:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.EAST);
-                            break;
-                        case NORTH:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.WEST);
-                            break;
-                        case WEST:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.SOUTH);
-                            break;
-                        case EAST:
-                            welt.setBlickrichtung(Welt.Himmelsrichtung.NORTH);
-                            break;
-                    }
-                    break;
-            }
-            welt.removeLastAction();
-        } else if (actionEffect == HunterActionEffect.BUMPED_INTO_WALL) {
-            welt.wandErgaenzen();
-            berechnung.setModus("checkEcke");
-            welt.removeLastAction();
-            switch (welt.getBlickrichtung()) {
-                case EAST:
-                    welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], WALL);
-                    break;
-                case WEST:
-                    welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], WALL);
-                    break;
-                case NORTH:
-                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, WALL);
-                    break;
-                case SOUTH:
-                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, WALL);
-                    break;
-            }
+            case BUMPED_INTO_WALL:
+                welt.wandErgaenzen();
+                berechnung.setModus("checkEcke");
+                berechnung.setZielfeldErreicht();
+                welt.getLastAction();
+                switch (welt.getBlickrichtung()) {
+                    case EAST:
+                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], WALL);
+                        break;
+                    case WEST:
+                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], WALL);
+                        break;
+                    case NORTH:
+                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, WALL);
+                        break;
+                    case SOUTH:
+                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, WALL);
+                        break;
+                }
+                welt.removeLastAction();
+                break;
 
-        } else if (actionEffect == HunterActionEffect.GOLD_FOUND) {
-            welt.setGoldGesammelt();
-        } else if (actionEffect == HunterActionEffect.WUMPUS_KILLED) {
-            welt.setWumpusGetoetet();
+            case GOLD_FOUND:
+                welt.setGoldGesammelt();
+                berechnung.setModus("goldAufgenommen");
+                break;
+
+            case WUMPUS_KILLED:
+                welt.setWumpusGetoetet();
+                break;
+
+            case NO_MORE_SHOOTS:
+                System.err.println("Keine Pfeile mehr! Fehler in Berechnung!");
+                break;
         }
     }
 
@@ -301,6 +308,7 @@ public class MyAgent extends WumpusHunterAgent {
                         welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], GESTANK1);
                         welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, GESTANK1);
                         welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, GESTANK1);
+                        berechnung.setModus("wumpusToeten");
                         break;
                     case 2:
                         welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1], GESTANK2);

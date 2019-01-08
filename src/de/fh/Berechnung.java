@@ -4,14 +4,17 @@ import de.fh.wumpus.enums.HunterAction;
 
 public class Berechnung {
     private Welt welt;
-    private Feld aktuellesZielfeld;
-    private Feld zwischenFeld;
     private String modus;
-    private boolean zwischenFeldErreicht = true;
+    private Feld zielfeld;
+    private boolean zielfeldErreicht = true; //muss auf False gesetzt werden, wenn ein neues Ziel bestimmt wurde
+    private Feld zwischenfeld;
+    private boolean zwischenfeldErreicht = true; //muss auf False gesetzt werden, wenn ein neues Zwischen-Ziel bestimmt wurde
+    private boolean debug = true;
 
     public Berechnung(Welt welt) {
         this.welt = welt;
-        aktuellesZielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99);
+        zielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99);
+        zwischenfeld = new Feld(Feld.Zustand.UNBEKANNT, -88, -88);
         modus = "standard";
     }
 
@@ -19,69 +22,151 @@ public class Berechnung {
     public void berechne() {
 
         System.out.println(" -------- Berechnungsausgabe: -------- ");
+        HunterAction nextAction = HunterAction.SIT;
 
+        //Wenn Hunter sich am Ziel befindet: boolean Zielerreicht auf true setzen
+        if (welt.getHunterFeld() == zielfeld) zielfeldErreicht = true;
+
+        if (welt.eingekesselt()) {
+            zielfeldErreicht = true;
+            zwischenfeldErreicht = true;
+            if (welt.isWumpusLebendig()) modus = "wumpusToeten";
+        }
+
+
+        //Zusätzliche Aktionen die in bestimmten Fällen ausgeführt werden sollen
+        //break wird nur dann gesetzt, wenn default nicht mehr durchlaufen werden soll
+        //z.B. wenn im Case bereits die nächste Aktion gesetzt werden konnte
         switch (modus) {
             case "checkEcke":
-                if (!welt.isUmrandet()) {
+                if (!welt.isUmrandet() && zielfeldErreicht) {
                     if (welt.getHunterPos()[1] == 1 && (welt.getBlickrichtung() == Welt.Himmelsrichtung.EAST || welt.getBlickrichtung() == Welt.Himmelsrichtung.WEST)
                             && !welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1).isBesucht()) {
-                        System.out.println("ecke1");
-                        aktuellesZielfeld = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1);
+                        zielfeld = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1);
+                        if(debug) System.out.println("Zielfeld durch Ecke 1: " + zielfeld);
+                        zielfeldErreicht = false;
                     } else if ((welt.getBlickrichtung() == Welt.Himmelsrichtung.EAST || welt.getBlickrichtung() == Welt.Himmelsrichtung.WEST)
                             && !welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1).isBesucht()) {
-                        aktuellesZielfeld = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1);
-                        System.out.println("ecke2");
-                    } else if (welt.getHunterPos()[0] == 1 && (welt.getBlickrichtung() == Welt.Himmelsrichtung.SOUTH || welt.getBlickrichtung() == Welt.Himmelsrichtung.NORTH)
+                        zielfeld = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1);
+                        if(debug) System.out.println("Zielfeld durch Ecke 2: " + zielfeld);
+                        zielfeldErreicht = false;
+                    } else if ((welt.getHunterPos()[0] == 1 && (welt.getBlickrichtung() == Welt.Himmelsrichtung.SOUTH || welt.getBlickrichtung() == Welt.Himmelsrichtung.NORTH))
                             && !welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]).isBesucht()) {
-                        aktuellesZielfeld = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]);
-                        System.out.println("ecke3");
-                    } else if (welt.getBlickrichtung() == Welt.Himmelsrichtung.SOUTH || welt.getBlickrichtung() == Welt.Himmelsrichtung.NORTH
+                        zielfeld = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]);
+                        if(debug) System.out.println("Zielfeld durch Ecke 3: " + zielfeld);
+                        zielfeldErreicht = false;
+                    } else if ((welt.getBlickrichtung() == Welt.Himmelsrichtung.SOUTH || welt.getBlickrichtung() == Welt.Himmelsrichtung.NORTH)
                             && !welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]).isBesucht()) {
-                        aktuellesZielfeld = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]);
-                        System.out.println("ecke4");
+                        zielfeld = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]);
+                        if(debug) System.out.println("Zielfeld durch Ecke 4: " + zielfeld);
+                        zielfeldErreicht = false;
                     }
+                    welt.wandErgaenzen();
                 }
-                setModus("standard");
-                //kein break, damit default noch ausgeführt wird
+                break;
 
-            default:
-                HunterAction nextAction;
-                //Wenn Zielfeld noch Wand, da noch nicht erreicht: ??????
-                if (aktuellesZielfeld.getRisiko() > 69) {
-                    aktuellesZielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99);
-                }
+            case "goldAufnehmen":
+                nextAction = HunterAction.GRAB;
+                System.out.println("Gold gefunden!");
+                break;
 
-                //wenn noch kein Zielfeld gesetzt oder Zielfeld erreicht: neues Ziel berrechnen
-                if (aktuellesZielfeld.getPosition()[0] == -99 && aktuellesZielfeld.getPosition()[1] == -99 || welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]) == aktuellesZielfeld) {
-                    bestimmeNaechstesZielFeld();
-                }
+            case "goldAufgenommen":
+                //Hunter soll zum Start laufen, wenn er das Gold aufgenommen hat
+                zielfeld = welt.getFeld(1, 1);
+                zielfeldErreicht = false;
+                break;
 
-                //wenn Gold aufgesammelt und auf Startposition
-                if (welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]) == aktuellesZielfeld && welt.isGoldAufgesammelt()) {
+            case "wumpusToeten":
+
+                break;
+
+        }
+        //Wenn Zielfeld noch Wand, da noch nicht erreicht: ??????
+        //if (aktuellesZielfeld.getRisiko() > 69) {
+        //    aktuellesZielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99);
+        //}
+
+        //Wenn nextAction im Switch nicht überschrieben wurde
+        if (nextAction == HunterAction.SIT) {
+            //Standardfall 1
+            //wenn das aktuelle Ziel erreicht wurde (bedeutet auch -> in anderen Cases kein neues Ziel gesetzt)
+            // und der Hunter das Gold noch nicht aufgesammelt hat: neues Ziel berechnen und hinlaufen
+            if (zielfeldErreicht && !welt.isGoldAufgesammelt()) {
+                if (debug) System.out.println("Standardfall 1: Ziel erreicht");
+                bestimmeNaechstesZielFeld();
+
+                //wenn das Zwischenfeld nicht erreicht werden kann
+                if (!welt.isInMap(bestimmeNaechstesZwischenFeld())) {
+                    if (debug)
+                        System.out.println("(3) Es wird keine Möglichkeit gefunden das Zwischenfeld zu erreichen: " + zwischenfeld);
                     nextAction = HunterAction.QUIT_GAME;
                 }
-                //wenn aktuell ein Zielfeld gegeben ist: hin laufen
-                else if (aktuellesZielfeld.getPosition()[0] > -1 && aktuellesZielfeld.getPosition()[1] > -1) {
+                //Zwischenfeld kann erreicht werden: bestimme Weg dahin
+                else {
                     nextAction = bestimmeWegZumFeld();
                 }
-                //wenn aktuell kein Ziel gegeben (d.h jedes Feld mit geringem Risiko besucht und Gold nicht gefunden) Werte: (-1, -1)
+            }
+            //wenn das aktuelle Ziel erreicht und das Gold bereits aufgesammelt wurde: Spiel beenden
+            else if (zielfeldErreicht) {
+                if (debug) System.out.println("Sonderfall Gold");
+                nextAction = HunterAction.QUIT_GAME;
+            }
+            //Standardfall 2
+            //wenn das aktuelle Ziel noch nicht erreicht wurde, versuchen Ziel über Zwischenziele zu erreichen
+            else {
+                if (debug) System.out.println("Standardfall 2: Ziel NICHT erreicht");
+                //wenn das aktuelle Ziel nicht in der Map liegt (z.B. wenn das Ziel schon länger besteht, die Welt aber mittlerweile umrandet ist)
+                //versuchen ein neues Ziel zu bestimmen
+                if (!welt.isInMap(zielfeld)) {
+                    bestimmeNaechstesZielFeld();
+                    //wenn die Bestimmung eines alternativen Zielfelds nicht geklappt hat, gibt es kein Zielfeld mehr und das Spiel wird beendet
+                    if (!welt.isInMap(zielfeld)) {
+                        System.out.println("Es wird kein neues Zielfeld mehr in der Map gefunden: " + zielfeld);
+                        nextAction = HunterAction.QUIT_GAME;
+                    }
+                    //Alternatives Zielfeld gefunden
+                    else {
+                        //wenn das Zwischenfeld nicht erreicht werden kann
+                        if (!welt.isInMap(bestimmeNaechstesZwischenFeld())) {
+                            System.out.println("(1) Es wird keine Möglichkeit gefunden, das Zwischenfeld zu erreichen: " + zwischenfeld);
+                            nextAction = HunterAction.QUIT_GAME;
+                        }
+                        //Zwischenfeld kann erreicht werden: bestimme Weg dahin
+                        else {
+                            nextAction = bestimmeWegZumFeld();
+                        }
+                    }
+                }
+                //aktuelles Ziel liegt in der Map
                 else {
-                    System.err.println("Spiel verlassen!");
-                    nextAction = HunterAction.QUIT_GAME;
+                    //wenn das Zwischenfeld nicht erreicht werden kann
+                    if (!welt.isInMap(bestimmeNaechstesZwischenFeld())) {
+                        System.out.println("(2) Es wird keine Möglichkeit gefunden, das Zwischenfeld zu erreichen: " + zwischenfeld);
+                        nextAction = HunterAction.QUIT_GAME;
+                    }
+                    //Zwischenfeld kann erreicht werden: bestimme Weg dahin
+                    else {
+                        nextAction = bestimmeWegZumFeld();
+                    }
                 }
 
-                welt.addNextAction(nextAction);
-
-                System.out.println(" -------- ENDE -------- ");
+            }
         }
+
+
+        System.out.println("Nächste berechnete Aktion: " + nextAction);
+        welt.addNextAction(nextAction);
+
+        System.out.println(" -------- ENDE -------- ");
     }
 
     //Hilfsmethoden der Klasse
 
     private HunterAction bestimmeWegZumFeld() {
-        //
-        //bestimmt den nächsten Schritt um von aktueller Position zum nächsten Zwischenfeld zu gelangen
-        int[] feldPos = bestimmeNaechstesZwischenFeld().getPosition();
+        //bestimmt nextAction um von aktueller Position zum nächsten Zwischenfeld zu gelangen
+
+        if (debug) System.out.println("Bestimme Weg von " + welt.getHunterFeld() + " nach " + zwischenfeld);
+        int[] feldPos = zwischenfeld.getPosition();
 
         if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] + 1 == feldPos[1]) {
             switch (welt.getBlickrichtung()) {
@@ -92,18 +177,17 @@ public class Berechnung {
                 case NORTH:
                     return HunterAction.TURN_RIGHT;
                 case SOUTH:
-                    zwischenFeldErreicht = true;
+                    zwischenfeldErreicht = true;
                     return HunterAction.GO_FORWARD;
             }
-        }
-        else if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] - 1 == feldPos[1]) {
+        } else if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] - 1 == feldPos[1]) {
             switch (welt.getBlickrichtung()) {
                 case EAST:
                     return HunterAction.TURN_LEFT;
                 case WEST:
                     return HunterAction.TURN_RIGHT;
                 case NORTH:
-                    zwischenFeldErreicht = true;
+                    zwischenfeldErreicht = true;
                     return HunterAction.GO_FORWARD;
                 case SOUTH:
                     return HunterAction.TURN_RIGHT;
@@ -111,7 +195,7 @@ public class Berechnung {
         } else if (welt.getHunterPos()[0] + 1 == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
             switch (welt.getBlickrichtung()) {
                 case EAST:
-                    zwischenFeldErreicht = true;
+                    zwischenfeldErreicht = true;
                     return HunterAction.GO_FORWARD;
 
                 case WEST:
@@ -126,19 +210,16 @@ public class Berechnung {
                 case EAST:
                     return HunterAction.TURN_LEFT;
                 case WEST:
-                    zwischenFeldErreicht = true;
+                    zwischenfeldErreicht = true;
                     return HunterAction.GO_FORWARD;
                 case NORTH:
                     return HunterAction.TURN_LEFT;
                 case SOUTH:
                     return HunterAction.TURN_RIGHT;
             }
-        } else if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
-            zwischenFeldErreicht = true;
-            return HunterAction.SIT;
         }
 
-
+        //Hier ist return NULL (Programmabsturz) ok, da dies bedeuten würde dass es eine fehlerhafte Bestimmung des Zwischenfeldes gab
         System.err.println("Fehler bei Wegbestimmung, Zwischenziel liegt nicht in der Nähe des Hunters");
         return null;
     }
@@ -146,66 +227,78 @@ public class Berechnung {
     private Feld bestimmeNaechstesZwischenFeld() {
         //bestimmt mit Hilfe von A* das nächste Zwischenfeld zum aktuellen Zielfeld
 
+        //Wenn das Zwischenfeld noch nicht erreicht ist, da er sich z.B. letztes mal nur gedreht hat, verändert sich das Zwischenfeld nicht
+        if (!zwischenfeldErreicht) {
+            if (debug) System.out.println("altes Zwischenziel bleibt erhalten: " + zwischenfeld);
+            return zwischenfeld;
+        }
 
-        if (!zwischenFeldErreicht) return zwischenFeld;
+        //Ansonsten neues Zwischenfeld auf dem Weg zum Zielfeld bestimmen:
 
         Feld aktHunterPos = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]);
-        ASternSuche aStern = new ASternSuche(aktHunterPos, aktuellesZielfeld, welt);
+        ASternSuche aStern = new ASternSuche(aktHunterPos, zielfeld, welt);
 
 
-
-        zwischenFeld = aStern.suche(20, 10);
-        if (zwischenFeld.getPosition()[0] != -1 && zwischenFeld.getPosition()[1] != -1) {
-            System.out.println("Zwischenfeld: " + zwischenFeld);
-            return zwischenFeld;
+        //Versuchen möglichst schnell und sicher zum Ziel zu kommen
+        zwischenfeld = aStern.suche(20, 10);
+        if (zwischenfeld.getPosition()[0] != -1 && zwischenfeld.getPosition()[1] != -1) {
+            System.out.println("Zwischenfeld: " + zwischenfeld);
+            return zwischenfeld;
         }
 
-        zwischenFeld = aStern.suche(45, 5);
-        if (zwischenFeld.getPosition()[0] != -1 && zwischenFeld.getPosition()[1] != -1) {
-            System.out.println("Zwischenfeld: " + zwischenFeld);
-            return zwischenFeld;
+        //Versuchen relativ schnell und sicher zum Ziel zu kommen
+        zwischenfeld = aStern.suche(45, 5);
+        if (zwischenfeld.getPosition()[0] != -1 && zwischenfeld.getPosition()[1] != -1) {
+            System.out.println("Zwischenfeld: " + zwischenfeld);
+            return zwischenfeld;
         }
 
-        zwischenFeld = aStern.suche(69, 1);
-        if (zwischenFeld.getPosition()[0] != -1 && zwischenFeld.getPosition()[1] != -1) {
-            System.out.println("Zwischenfeld: " + zwischenFeld);
-            return zwischenFeld;
+        //Versuchen ohne zu sterben zum Ziel zu kommen
+        zwischenfeld = aStern.suche(69, 1);
+        if (zwischenfeld.getPosition()[0] != -1 && zwischenfeld.getPosition()[1] != -1) {
+            System.out.println("Zwischenfeld: " + zwischenfeld);
+            return zwischenfeld;
         }
 
-
-        zwischenFeld = aStern.suche(90, 0);
-        if (zwischenFeld.getPosition()[0] != -1 && zwischenFeld.getPosition()[1] != -1) {
-            System.out.println("Zwischenfeld: " + zwischenFeld);
-            return zwischenFeld;
+        //Versuchen überhaupt mit maximalem Risiko zum Ziel zu kommen, Länge der Strecke irrelevant
+        zwischenfeld = aStern.suche(90, 0);
+        if (zwischenfeld.getPosition()[0] != -1 && zwischenfeld.getPosition()[1] != -1) {
+            System.out.println("Zwischenfeld: " + zwischenfeld);
+            return zwischenfeld;
         }
 
-        System.err.println("Keinen Weg zum Ziel gefunden");
-        return null;
+        //Wenn es keine Möglichkeit gibt das Ziel zu erreichen:
+        return zwischenfeld; //hat die Werte -1,-1 -> liegt nicht in der Map
+
+
     }
 
     private void bestimmeNaechstesZielFeld() {
 
-        //wenn Gold bereits aufgesammelt ist, zurück zum Start
-        if (welt.isGoldAufgesammelt()) {
-            aktuellesZielfeld = welt.getFeld(1, 1);
-            System.out.println("Gold gefunden!");
-            //System.out.println("Zielfeld: " + aktuellesZielfeld);
-        } else {
-            //nächstes Feld suchen
-            Feld f;
-            f = sucheNaechstesUnbekanntes(welt.getHunterPos()[0], welt.getHunterPos()[1], 45);
-            if (f.getPosition()[0] == -1)
-                f = sucheNaechstesUnbekanntes(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
-            if (f.getPosition()[0] == -1)
-                f = sucheNaechstesErweitert(welt.getHunterPos()[0], welt.getHunterPos()[1], 45);
-            if (f.getPosition()[0] == -1)
-                f = sucheNaechstesErweitert(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
-            if (f.getPosition()[0] == -1)
-                f = sucheNaechstesMitRisiko(welt.getHunterPos()[0], welt.getHunterPos()[1], 45);
-            if (f.getPosition()[0] == -1)
-                f = sucheNaechstesMitRisiko(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
-            aktuellesZielfeld = f;
-        }
+        Feld f;
+
+        //Als erstes wird versucht ein noch nie besuchtes Feld mit möglichst geringem Risiko zu finden
+        f = sucheNaechstesUnbekanntes(welt.getHunterPos()[0], welt.getHunterPos()[1], 45);
+        if (f.getPosition()[0] == -1)
+            //Wenn es kein unbesuchtes Feld mit maxRisiko mehr gibt, wird versucht die Map zu erweitern
+            f = sucheNaechstesErweitert();
+        if (f.getPosition()[0] == -1)
+            //klappt dies nicht, wird das Risiko für ein unbesuchtes Feld erhöht
+            f = sucheNaechstesUnbekanntes(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
+        if (f.getPosition()[0] == -1)
+            //wenn er von 3 Feldern mit zu hohem Risiko umgeben ist: zurück gehen
+            f = sucheNaechstesMitRisiko(welt.getHunterPos()[0], welt.getHunterPos()[1], 45);
+        if (f.getPosition()[0] == -1)
+            f = sucheNaechstesMitRisiko(welt.getHunterPos()[0], welt.getHunterPos()[1], 69);
+
+        //Fall: Es gibt kein unbesuchtes Feld mit passablem Risiko und die Map kann nicht mehr erweitert werden
+        // -> Aufgeben (Feld mit -1, -1) wird zurück gegeben
+
+        zielfeld = f;
+
+        zielfeldErreicht = false;
+        if (debug) System.out.println("neu bestimmtes Ziel: " + zielfeld);
+
     }
 
     private Feld sucheNaechstesMitRisiko(int x, int y, int maxRisiko) {
@@ -318,35 +411,34 @@ public class Berechnung {
         }
 
 
-        System.out.println("Kein unbekanntes Feld mehr vorhanden oder Risiko zu groß!");
+        if (debug) System.out.println("Kein unbekanntes Feld mehr vorhanden oder Risiko zu groß! Risiko: " + maxRisiko);
         return new Feld(Feld.Zustand.UNBEKANNT, -1, -1);
     }
 
-    private Feld sucheNaechstesErweitert(int x, int y, int maxRisiko) {
-        //Wenn kein unbesuchtes Feld mehr in der Nähe, die Weltgröße aber noch nicht begrenzt ist: in eine Richtung Map erweitern
+    private Feld sucheNaechstesErweitert() {
+        //Wenn kein unbesuchtes Feld mehr in der Nähe, die Weltgröße aber noch nicht begrenzt ist: Map nach unten-rechts erweitern
         if (!welt.isUmrandet()) {
-            if (welt.getFeld(x + 1, y).getRisiko() < maxRisiko) {
-                return welt.getFeld(x + 1, y);
-            }
-            if (welt.getFeld(x - 1, y).getRisiko() < maxRisiko) {
-                return welt.getFeld(x - 1, y);
-            }
-            if (welt.getFeld(x, y + 1).getRisiko() < maxRisiko) {
-                return welt.getFeld(x, y + 1);
-            }
-            if (welt.getFeld(x, y - 1).getRisiko() < maxRisiko) {
-                return welt.getFeld(x, y - 1);
-            }
+            return welt.getFeld(welt.mapSize()[0], welt.mapSize()[1]);
         }
 
-
-        System.err.println("Kein unbekanntes Feld mehr vorhanden oder Risiko zu groß!");
+        if (debug) System.out.println("Map konnte nicht erweitert werden, vermutlich umrandet? " + welt.isUmrandet());
         return new Feld(Feld.Zustand.UNBEKANNT, -1, -1);
     }
+
+    private void
 
 
     //Getter-Setter
     public void setModus(String modus) {
         this.modus = modus;
+    }
+
+    public void setZielfeldErreicht(){
+        //Wenn BumpedIntoWall, Ziel auf erreicht setzen, da es keinen Sinn macht weiter die Wand versuchen zu erreichen
+        zielfeldErreicht = true;
+    }
+
+    public void setZwischenfeldErreicht(){
+        zwischenfeldErreicht = true;
     }
 }

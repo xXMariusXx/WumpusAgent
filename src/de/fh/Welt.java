@@ -55,19 +55,25 @@ public class Welt {
     }
 
 
-    // ----Zustands Zeugs ----
+    // ----Welt Zeugs ----
     public HashSet<Feld.Zustand> getZustaende(int x, int y) {
         return map[y][x].getZustaende();
     }
 
     public void addZustand(int x, int y, Zustand z) {
         if (x <= 0 || y <= 0 || ((x >= map[0].length || y >= map.length) && isUmrandet())) return;
+
         //Map automatisch vergrößern, wenn Feld noch nicht vorhanden
         if (x >= map[0].length || y >= map.length) {
             umrandet = false;
             Feld tmp[][];
+
+            // Spalte + Zeile hinzufügen
+            if (x >= map[0].length && y >= map.length) {
+                tmp = new Feld[y + 1][x + 1];
+            }
             // Spalte hinzufügen
-            if (x >= map[0].length) {
+            else if (x >= map[0].length) {
                 tmp = new Feld[map.length][x + 1];
             }
             //Zeile hinzufügen
@@ -78,7 +84,7 @@ public class Welt {
             //automatisch mit-angelegte Felder erzeugen
             for (int a = 0; a < tmp.length; a++) {
                 for (int b = 0; b < tmp[0].length; b++) {
-                    tmp[a][b] = new Feld(new HashSet<Zustand>(), b, a);
+                    tmp[a][b] = new Feld(UNBEKANNT, b, a);
                 }
             }
             //neuen Zustand speichern
@@ -100,7 +106,7 @@ public class Welt {
         if (z == HUNTER) {
             this.wandErgaenzen();
         }
-        checkWumpusWandGefahr(x,y,z);
+        checkWumpusWandGefahr(x, y, z);
 
 
     }
@@ -110,28 +116,6 @@ public class Welt {
             map[y][x].removeZustand(z);
         }
 
-    }
-
-    public void checkWumpusWandGefahr(int x, int y, Zustand z) {
-        //Wenn Gestank 1 Feld entfernt von einer Wand gesetzt werden soll, riskante Felder markieren
-        if (z == GESTANK3 || z == GESTANK2 || z == GESTANK1) {
-            if (getFeld(x, y - 2).getZustaende().contains(WALL)) {
-                addZustand(x - 1, y - 1, EVTWUMPUS);
-                addZustand(x + 1, y - 1, EVTWUMPUS);
-            }
-            if (getFeld(x, y + 2).getZustaende().contains(WALL)) {
-                addZustand(x - 1, y + 1, EVTWUMPUS);
-                addZustand(x + 1, y + 1, EVTWUMPUS);
-            }
-            if (getFeld(x+2, y).getZustaende().contains(WALL)) {
-                addZustand(x + 1, y - 1, EVTWUMPUS);
-                addZustand(x + 1, y + 1, EVTWUMPUS);
-            }
-            if (getFeld(x-2, y - 2).getZustaende().contains(WALL)) {
-                addZustand(x - 1, y - 1, EVTWUMPUS);
-                addZustand(x - 1, y + 1, EVTWUMPUS);
-            }
-        }
     }
 
     public int wandGrenzeX() {
@@ -185,6 +169,11 @@ public class Welt {
         int maxX = wandGrenzeX();
         int maxY = wandGrenzeY();
 
+        if (maxX < 3 || maxY < 3) {
+            umrandet = false;
+            return umrandet;
+        }
+
         for (int i = 0; i <= maxX; i++) {
             if (!getFeld(i, maxY).getZustaende().contains(WALL)) {
                 umrandet = false;
@@ -201,6 +190,12 @@ public class Welt {
 
         umrandet = true;
         return umrandet;
+
+        //ToDo map auf Umrandungsgröße verkleinern, wenn umrandet
+    }
+
+    public Feld getFeld(int[] pos) {
+        return getFeld(pos[0], pos[1]);
     }
 
     public Feld getFeld(int x, int y) {
@@ -214,6 +209,10 @@ public class Welt {
 
     }
 
+    public boolean isInMap(Feld f) {
+        return isInMap(f.getPosition()[0], f.getPosition()[1]);
+    }
+
     public boolean isInMap(int x, int y) {
         return (x < map[0].length && y < map.length && x >= 0 && y >= 0);
     }
@@ -223,6 +222,24 @@ public class Welt {
         size[0] = map[0].length;
         size[1] = map.length;
         return size;
+    }
+
+    public void addPunkte(int i) {
+        punkte += i;
+    }
+
+    public void removePunkte(int i) {
+        punkte -= i;
+    }
+
+    public boolean eingekesselt(){
+        int i = 0;
+        if (getFeld(hunterPos[0]+1, hunterPos[1]).getRisiko() > 69) i++;
+        if (getFeld(hunterPos[0]-1, hunterPos[1]).getRisiko() > 69) i++;
+        if (getFeld(hunterPos[0], hunterPos[1]+1).getRisiko() > 69) i++;
+        if (getFeld(hunterPos[0], hunterPos[1]-1).getRisiko() > 69) i++;
+        if (i > 2) return true;
+        return false;
     }
 
 
@@ -251,7 +268,7 @@ public class Welt {
     }
 
 
-    // ---- Hunter Zeugs ----
+    // ---- Hunter/Stats Zeugs ----
     public void updateHunterPos(int x, int y) {
         //Hunter an alter Position aus Map löschen
         removeZustand(hunterPos[0], hunterPos[1], HUNTER);
@@ -265,6 +282,10 @@ public class Welt {
         return hunterPos;
     }
 
+    public Feld getHunterFeld() {
+        return getFeld(hunterPos[0], hunterPos[1]);
+    }
+
     public Himmelsrichtung getBlickrichtung() {
         return blickrichtung;
     }
@@ -275,20 +296,25 @@ public class Welt {
 
     public void setGoldGesammelt() {
         goldAufgesammelt = true;
+        removeZustand(getHunterPos()[0], getHunterPos()[1], GOLD);
         addPunkte(100);
     }
 
     public void setWumpusGetoetet() {
         wumpusLebendig = false;
+        for (int i = 0; i < map[0].length; i++) {
+            for (int j = 0; j < map.length; j++) {
+                map[j][i].removeZustand(GESTANK3);
+                map[j][i].removeZustand(GESTANK2);
+                map[j][i].removeZustand(GESTANK1);
+                map[j][i].removeZustand(EVTWUMPUS);
+            }
+        }
         addPunkte(100);
     }
 
-    public void addPunkte(int i) {
-        punkte += i;
-    }
-
-    public void removePunkte(int i) {
-        punkte -= i;
+    public boolean isWumpusLebendig() {
+        return wumpusLebendig;
     }
 
     public void pfeilGeschossen() {
@@ -299,6 +325,33 @@ public class Welt {
     public boolean isGoldAufgesammelt() {
         return goldAufgesammelt;
     }
+
+    public void checkWumpusWandGefahr(int x, int y, Zustand z) {
+        //Wenn Gestank 1 Feld entfernt von einer Wand gesetzt werden soll, riskante Felder markieren
+        if (z == GESTANK3 || z == GESTANK2 || z == GESTANK1) {
+            if (getFeld(x, y - 2).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y - 1, EVTWUMPUS);
+                addZustand(x + 1, y - 1, EVTWUMPUS);
+            }
+            if (getFeld(x, y + 2).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y + 1, EVTWUMPUS);
+                addZustand(x + 1, y + 1, EVTWUMPUS);
+            }
+            if (getFeld(x + 2, y).getZustaende().contains(WALL)) {
+                addZustand(x + 1, y - 1, EVTWUMPUS);
+                addZustand(x + 1, y + 1, EVTWUMPUS);
+            }
+            if (getFeld(x - 2, y - 2).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y - 1, EVTWUMPUS);
+                addZustand(x - 1, y + 1, EVTWUMPUS);
+            }
+        }
+    }
+
+    public void berechneWumpusPosition(){
+
+    }
+
 
     // ---- Debug Zeugs ----
 
@@ -311,7 +364,7 @@ public class Welt {
                         System.out.print("[00" + risiko + "] ");
                         break;
                     case 2:
-                        if (risiko == 39) System.out.print("[-H-] ");
+                        if (map[i][z].getZustaende().contains(HUNTER)) System.out.print("[-H-] ");
                         else System.out.print("[0" + risiko + "] ");
                         break;
 

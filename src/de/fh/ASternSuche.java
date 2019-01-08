@@ -27,6 +27,7 @@ public class ASternSuche {
     public Feld suche(int risiko, int faktorEntfernung) {
         this.risiko = risiko;
         this.faktorEntfernung = faktorEntfernung;
+
         openList = new ArrayList<>();
         closeList = new HashSet<>();
 
@@ -76,7 +77,7 @@ public class ASternSuche {
 
     public void bewerteKnoten(Knoten expansionsKandidat) {
 
-        int schaetzwert, pfadkosten = 5; //je höher die Pfadkosten gesetzt werden, desto unwichtiger der Schätzwert
+        int schaetzwert, pfadkosten = 15; //je höher die Pfadkosten gesetzt werden, desto unwichtiger der Schätzwert
 
         //möglich geringe Entfernung zum Ziel und geringes Risiko
         schaetzwert = expansionsKandidat.getFeld().getRisiko() + faktorEntfernung * berechneEntfernung(expansionsKandidat); //je höher der Faktor desto unwichtiger das Risiko
@@ -136,7 +137,7 @@ public class ASternSuche {
             return;
         }
 
-        for (Knoten k: openList) {
+        for (Knoten k: openList) { //ToDO überlegen
             if(k.hashCode() == nachfolger.hashCode()) return;
         }
 

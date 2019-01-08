@@ -24,7 +24,7 @@ public class Feld {
         GESTANK1(86),
         GESTANK2(46),
         GESTANK3(26),
-        EVTWUMPUS(70),
+        EVTWUMPUS(66),
 
         WIND(31),
         EVTFALLE(91),
@@ -157,11 +157,13 @@ public class Feld {
 
     //Interne Methoden
     private void berechneRisiko() {
-        //TODO verfeinern
+        //TODO verfeinern, z.B. Felder rund um das Feld herum angucken
         int max = 5; //unbekanntes Feld ist besser als bekanntes freies Feld aber schlechter als Gold
         for (Zustand z : set) {
             if (z.getBewertung() > max) max = z.getBewertung();
         }
         risiko = max;
+
+
     }
 }
