@@ -51,6 +51,7 @@ public class MyAgent extends WumpusHunterAgent {
      */
     @Override
     public void updateState(HunterPercept percept, HunterActionEffect actionEffect) {
+        System.out.println("________________________________________________________________________________________________________________________________________________________________________________");
         this.percept = percept;
         this.actionEffect = actionEffect;
         stenchRadar = this.percept.getWumpusStenchRadar();
@@ -70,7 +71,7 @@ public class MyAgent extends WumpusHunterAgent {
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]+1, EVTFALLE);
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]-1, EVTFALLE);
 
-            //ToDo prüfen ob Falle genauer eingegrenzt werden kann!
+            //ToDo evt prüfen ob Falle genauer eingegrenzt werden kann!
         }
 
         // ---- Gold setzen ----
@@ -80,24 +81,22 @@ public class MyAgent extends WumpusHunterAgent {
         }
 
         // ---- Gestank zurücksetzen wenn Wumpus sich bewegt hat ----
-        if (percept.isRumble() && !stenchRadar.isEmpty()) {
+        if (percept.isRumble()) {
             this.gestankLoeschen();
-            //Wenn Wumpus sich bewegt hat, das aktuelle Zwischenfeld aber noch nicht erreicht ist, sollte eventuell ein neues Zwischenfeld berrechnet werden
-            berechnung.setZwischenfeldErreicht();
         }
 
-        // ---- Gestank auswerten ----
-        if (!stenchRadar.isEmpty()) {
-            this.gestankAuswerten();
-            //ToDo Eventuelle Wumpus Position ermitteln und setzen
-        }
+        //Wenn Wumpus sich bewegt hat, das aktuelle Zwischenfeld aber noch nicht erreicht ist, sollte eventuell ein neues Zwischenfeld berrechnet werden
+        if (percept.isRumble() && !stenchRadar.isEmpty())  berechnung.setZwischenfeldErreicht();
+
+
+        if (!stenchRadar.isEmpty()) this.gestankAuswerten();
 
 
         // -------- AKTUELLEN STAND AUSGEBEN --------
 
-        System.out.println("\n.........................................................................");
+        System.out.println(".........................................................................");
 
-        System.out.println("Risiko-Tabelle");
+        System.out.println("STATS VOR BERECHNUNG\nRisiko-Tabelle");
         welt.displayRisiko();
         System.out.println();
         System.out.println("Action Effekt: " + actionEffect);
@@ -118,7 +117,7 @@ public class MyAgent extends WumpusHunterAgent {
 
         //Gibt aus ob ein Nachbarfeld eine Wand ist
         if (percept.isBump()) {
-            System.out.println("Ein Nachbarfeld ist Wand");
+            //System.out.println("Ein Nachbarfeld ist Wand");
         }
 
         //Gib aus wenn aktuelle Position = Gold
@@ -161,7 +160,7 @@ public class MyAgent extends WumpusHunterAgent {
          }
 
          if(actionEffect == HunterActionEffect.MOVEMENT_SUCCESSFUL) {
-         //Letzte Bewegungsaktion war gültig
+         //Letzte Bewegungsaktion war gültig, oder Pfeil geschossen
          }
 
          if(actionEffect == HunterActionEffect.GOLD_FOUND) {
@@ -198,6 +197,9 @@ public class MyAgent extends WumpusHunterAgent {
         berechnung.berechne();
         HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
+        System.out.println("\nRisiko Tabelle nach Berechnung");
+        welt.displayRisiko();
+        System.out.println("________________________________________________________________________________________________________________________________________________________________________________");
         return nextHunterAction;
     }
 
@@ -205,10 +207,27 @@ public class MyAgent extends WumpusHunterAgent {
     //Update Methoden
     private void updateHunterStats() {
         switch (actionEffect) {
-        //ToDo setzen wo wumpus wahrscheinlich nicht ist
             case MOVEMENT_SUCCESSFUL:
                 welt.removePunkte(1);
                 switch (welt.getLastAction()) {
+                    case SHOOT:
+                        switch (welt.getBlickrichtung()) {
+                            case EAST:
+                                //Löscht 3 Wumpus Gefahren in der Map von Position des Hunters in Blick/Pfeilrichtung
+                                welt.removeWumpusGefahr();
+                                break;
+                            case WEST:
+                                welt.removeWumpusGefahr();
+                                break;
+                            case NORTH:
+                                welt.removeWumpusGefahr();
+                                break;
+                            case SOUTH:
+                                welt.removeWumpusGefahr();
+                                break;
+                            }
+                        break;
+
                     case GO_FORWARD:
                         switch (welt.getBlickrichtung()) {
                             case EAST:
@@ -308,7 +327,7 @@ public class MyAgent extends WumpusHunterAgent {
                         welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], GESTANK1);
                         welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, GESTANK1);
                         welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, GESTANK1);
-                        berechnung.setModus("wumpusToeten");
+                        //berechnung.setModus("wumpusToeten");
                         break;
                     case 2:
                         welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1], GESTANK2);
@@ -340,6 +359,15 @@ public class MyAgent extends WumpusHunterAgent {
     }
 
     private void gestankLoeschen(){
+        for (int i = 0; i<welt.getMapSize()[0];i++){
+            for (int j = 0; j < welt.getMapSize()[1]; j++) {
+                welt.removeZustand(i,j, GESTANK1);
+                welt.removeZustand(i,j, GESTANK2);
+                welt.removeZustand(i,j, GESTANK3);
+                welt.removeZustand(i,j, EVTWUMPUS);
+            }
+        }
+        /*
         welt.removeZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], GESTANK1);
         welt.removeZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], GESTANK1);
         welt.removeZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, GESTANK1);
@@ -372,5 +400,6 @@ public class MyAgent extends WumpusHunterAgent {
 
             }
         }
+        */
     }
 }

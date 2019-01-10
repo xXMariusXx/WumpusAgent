@@ -9,6 +9,7 @@ public class Feld {
     private int risiko;
     private boolean besucht;
     private int[] position;
+    private boolean beschossen = false;
 
 
     //Zustand Enum
@@ -99,6 +100,11 @@ public class Feld {
                 break;
 
             case HUNTER:
+                set.remove(Zustand.GESTANK3);
+                set.remove(Zustand.GESTANK2);
+                set.remove(Zustand.GESTANK1);
+                set.remove(Zustand.EVTFALLE);
+                set.remove(Zustand.EVTWUMPUS);
                 set.add(z);
                 setBesucht();
                 break;
@@ -148,6 +154,14 @@ public class Feld {
 
     public void setPosition(int[] position) {
         this.position = position;
+    }
+
+    public void setBeschossen() {
+        this.beschossen = true;
+    }
+
+    public boolean isBeschossen() {
+        return beschossen;
     }
 
     @Override

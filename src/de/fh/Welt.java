@@ -14,10 +14,9 @@ public class Welt {
     private Feld[][] map; //1. Wert = Y (Zeile), 2. Wert = X (Spalte)
 
 
-    //TODO -Wumpus und Feld genauer bestimmen
-    //ToDo -Schießen
     //ToDo - Punktestand
-    // Todo kontrollausgaben
+    //ToDo: Map nicht 2 unnötige Spalten breit erweitern
+
 
     // ---- Hunter Stats ----
     private int[] hunterPos = new int[2]; //[0] = X-Wert, [1] = Y-Wert
@@ -70,14 +69,17 @@ public class Welt {
 
             // Spalte + Zeile hinzufügen
             if (x >= map[0].length && y >= map.length) {
+                System.out.println("Feld um X und Y erweitern:" + x +","+y );
                 tmp = new Feld[y + 1][x + 1];
             }
             // Spalte hinzufügen
             else if (x >= map[0].length) {
+                System.out.println("Feld um X erweitern:" + x +","+y );
                 tmp = new Feld[map.length][x + 1];
             }
             //Zeile hinzufügen
             else {
+                System.out.println("Feld um Y erweitern:" + x +","+y );
                 tmp = new Feld[y + 1][map[0].length];
             }
 
@@ -187,11 +189,14 @@ public class Welt {
                 return umrandet;
             }
         }
-
         umrandet = true;
+
+
+
+
         return umrandet;
 
-        //ToDo map auf Umrandungsgröße verkleinern, wenn umrandet
+        //ToDo: Map nicht 2 unnötige Spalten breit erweitern
     }
 
     public Feld getFeld(int[] pos) {
@@ -214,10 +219,11 @@ public class Welt {
     }
 
     public boolean isInMap(int x, int y) {
+        //System.out.println("isInMap von :" + x +","+y + "="+ (x < map[0].length && y < map.length && x >= 0 && y >= 0));
         return (x < map[0].length && y < map.length && x >= 0 && y >= 0);
     }
 
-    public int[] mapSize() {
+    public int[] getMapSize() {
         int[] size = new int[2];
         size[0] = map[0].length;
         size[1] = map.length;
@@ -232,14 +238,82 @@ public class Welt {
         punkte -= i;
     }
 
-    public boolean eingekesselt(){
+    public boolean isEingekesselt(int x, int y, int maxRisiko){
+        return isEingekesselt(getFeld(x,y),maxRisiko);
+    }
+
+    public boolean isEingekesselt(Feld f, int maxRisiko){
         int i = 0;
-        if (getFeld(hunterPos[0]+1, hunterPos[1]).getRisiko() > 69) i++;
-        if (getFeld(hunterPos[0]-1, hunterPos[1]).getRisiko() > 69) i++;
-        if (getFeld(hunterPos[0], hunterPos[1]+1).getRisiko() > 69) i++;
-        if (getFeld(hunterPos[0], hunterPos[1]-1).getRisiko() > 69) i++;
+        int x = f.getPosition()[0];
+        int y = f.getPosition()[1];
+
+        if (isInMap(x+1, y) && getFeld(x+1, y).getRisiko() > maxRisiko){
+            i++;
+            //System.out.println("Eingekessel von: " + (hunterPos[0]+1) + "," + hunterPos[1]);
+        }
+
+        if (isInMap(x-1, y) && getFeld(x-1, y).getRisiko() > maxRisiko) {
+            i++;
+            //System.out.println("Eingekessel von: " + (hunterPos[0]-1) + "," + hunterPos[1]);
+        }
+
+        if (isInMap(x, y+1) && getFeld(x, y+1).getRisiko() > maxRisiko) {
+            i++;
+           // System.out.println("Eingekessel von: " + (hunterPos[0]) + "," + (hunterPos[1]+1));
+        }
+
+        if (isInMap(x, y-1) && getFeld(x, y-1).getRisiko() > maxRisiko){
+            i++;
+            //System.out.println("Eingekessel von: " + (hunterPos[0]) + "," + (hunterPos[1]-1));
+        }
+
         if (i > 2) return true;
+
         return false;
+    }
+
+    public boolean isVonGestankEingekesselt(){
+        int i = 0;
+        if (isInMap(hunterPos[0]+1, hunterPos[1]) && (getFeld(hunterPos[0]+1, hunterPos[1]).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0]+1, hunterPos[1]).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0]-1, hunterPos[1]) && (getFeld(hunterPos[0]-1, hunterPos[1]).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0]-1, hunterPos[1]).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0], hunterPos[1]+1) && (getFeld(hunterPos[0], hunterPos[1]+1).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]+1).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0], hunterPos[1]-1) && (getFeld(hunterPos[0], hunterPos[1]-1).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]-1).getZustaende().contains(EVTWUMPUS))) i++;
+        if (i > 1) return true;
+        return false;
+    }
+
+    public boolean isInBlickrichtung(Feld f){
+        switch (blickrichtung) {
+            case EAST:
+                if (getFeld(hunterPos[0] + 1, hunterPos[1]) == f) return true;
+                return false;
+            case SOUTH:
+                if (getFeld(hunterPos[0], hunterPos[1] + 1) == f) return true;
+                return false;
+            case WEST:
+                if (getFeld(hunterPos[0] - 1, hunterPos[1]) == f) return true;
+                return false;
+            case NORTH:
+                if (getFeld(hunterPos[0], hunterPos[1] - 1) == f) return true;
+                return false;
+            default:
+                return false;
+        }
+    }
+
+    public Feld getFeldInBlickrichtung(){
+        switch (blickrichtung) {
+            case EAST:
+                return getFeld(hunterPos[0] + 1, hunterPos[1]);
+            case SOUTH:
+                return getFeld(hunterPos[0], hunterPos[1] + 1);
+            case WEST:
+                return getFeld(hunterPos[0] - 1, hunterPos[1]);
+            case NORTH:
+                return getFeld(hunterPos[0], hunterPos[1] - 1);
+        }
+        System.err.println("Fehler beim Feldzugriff!");
+        return null;
     }
 
 
@@ -315,6 +389,39 @@ public class Welt {
 
     public boolean isWumpusLebendig() {
         return wumpusLebendig;
+    }
+
+    public int getAnzahlPfeile() {
+        return anzahlPfeile;
+    }
+
+    public void removeWumpusGefahr(){
+        Feld f = getFeld(hunterPos[0],hunterPos[1]);
+        int i = 0;
+        while(i < 3){
+            switch (blickrichtung) {
+                case EAST:
+                    f = getFeld(hunterPos[0] + i, hunterPos[1]);
+                    break;
+                case SOUTH:
+                    f= getFeld(hunterPos[0], hunterPos[1] + i);
+                    break;
+                case WEST:
+                    f= getFeld(hunterPos[0] - i, hunterPos[1]);
+                    break;
+                case NORTH:
+                    f= getFeld(hunterPos[0], hunterPos[1] - i);
+                    break;
+            }
+
+            f.setBeschossen();
+            f.removeZustand(GESTANK3);
+            f.removeZustand(GESTANK2);
+            f.removeZustand(GESTANK1);
+            f.removeZustand(EVTFALLE);
+
+            i++;
+        }
     }
 
     public void pfeilGeschossen() {

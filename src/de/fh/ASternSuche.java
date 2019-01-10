@@ -101,7 +101,7 @@ public class ASternSuche {
     }
 
     private void expandiereKnoten(Knoten f) {
-        if (welt.isUmrandet()) {
+        //if (welt.isUmrandet()) {
             if (welt.isInMap(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]))
                 berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
             if (welt.isInMap(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]))
@@ -110,12 +110,12 @@ public class ASternSuche {
                 berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
             if (welt.isInMap(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1))
                 berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
-        } else {
-            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
-            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]), f);
-            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
-            berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
-        }
+       // } else {
+          //  berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
+           // berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]), f);
+          //  berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
+          //  berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
+       // }
 
 
     }
@@ -137,7 +137,7 @@ public class ASternSuche {
             return;
         }
 
-        for (Knoten k: openList) { //ToDO überlegen
+        for (Knoten k: openList) {
             if(k.hashCode() == nachfolger.hashCode()) return;
         }
 
