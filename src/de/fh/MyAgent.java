@@ -52,9 +52,9 @@ public class MyAgent extends WumpusHunterAgent {
         this.actionEffect = actionEffect;
         stenchRadar = this.percept.getWumpusStenchRadar();
 
-
         // 1. ----------- WELT AKTUALISIEREN -----------
 
+        System.out.println("....................................WELT AKTUALISIEREN........................");
         // ---- Hunter Stats setzen ----
         this.updateHunterStats();
 
@@ -85,15 +85,20 @@ public class MyAgent extends WumpusHunterAgent {
 
 
         if (!stenchRadar.isEmpty()) this.gestankAuswerten();
-
+        System.out.println("....................................ENDE WELT AKTUALISIEREN...................");
 
         // -------- AKTUELLEN STAND AUSGEBEN --------
 
-        System.out.println(".........................................................................");
+        System.out.println("....................................STATS.....................................");
 
-        System.out.println("STATS VOR BERECHNUNG\nRisiko-Tabelle");
+        System.out.println("Risiko-Tabelle");
         welt.displayRisiko();
         System.out.println();
+
+        System.out.println("Besucht-Tabelle");
+        welt.displayBesucht();
+        System.out.println();
+
         System.out.println("Action Effekt: " + actionEffect);
 
         //Gib alle riechbaren Wumpis aus
@@ -132,12 +137,7 @@ public class MyAgent extends WumpusHunterAgent {
             System.out.println("Scream bemerkt");
         }
 
-        System.out.println(".........................................................................\n");
-
-
-
-
-
+        System.out.println("....................................ENDE STATS................................\n");
 
 
         /*
@@ -172,8 +172,6 @@ public class MyAgent extends WumpusHunterAgent {
          //Schuss ungültig, keine Pfeile mehr
          }
          */
-
-
     }
 
     /**
@@ -302,7 +300,7 @@ public class MyAgent extends WumpusHunterAgent {
 
             case GOLD_FOUND:
                 welt.setGoldGesammelt();
-                berechnung.setModus("goldAufgenommen");
+                //berechnung.setModus("goldAufgenommen");
                 break;
 
             case WUMPUS_KILLED:
@@ -318,12 +316,12 @@ public class MyAgent extends WumpusHunterAgent {
         if (percept.isBump()){
             //System.out.println("isBump wird ausgewertet!");
             if (welt.getHunterPos()[0] == 1) {
-                System.out.println("Bump Fall1 - Wand links ergänzen");
+                //System.out.println("Bump Fall1 - Wand links ergänzen");
                 welt.addZustand(0,welt.getHunterPos()[1],WALL);
                 welt.wandErgaenzen();
             }
             else if (welt.getHunterPos()[1] == 1){
-                System.out.println("Bump Fall2 - Wand oben ergänzen");
+                //System.out.println("Bump Fall2 - Wand oben ergänzen");
                 welt.addZustand(welt.getHunterPos()[0],0,WALL);
                 welt.wandErgaenzen();
             }

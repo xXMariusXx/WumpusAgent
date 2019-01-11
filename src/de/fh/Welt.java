@@ -106,7 +106,7 @@ public class Welt {
 
         //Wenn Hunter sich bewegt hat nach Möglichkeit weitere Wände ergänzen
         if (z == HUNTER) {
-            //this.wandErgaenzen();
+            this.wandErgaenzen();
         }
         checkWumpusWandGefahr(x, y, z);
 
@@ -146,9 +146,6 @@ public class Welt {
     }
 
     public void wandErgaenzen() {
-        int maxX = wandGrenzeX();
-        int maxY = wandGrenzeY();
-
         System.out.println("Wand ergänzen aufgerufen!");
         if (hunterPos[0] == 1 && getFeld(hunterPos[0],hunterPos[1]+1).getZustaende().contains(WALL)) {
             System.out.println("Eckenwand UL wird hinzugefügt");
@@ -160,10 +157,17 @@ public class Welt {
             addZustand(hunterPos[0]+1,hunterPos[1]-1,WALL);
         }
 
-        /*//fehlende Umrandung auf X und Y Achse ergänzen, wenn Map vergrößert wird.
-        if (isInMap(maxX + 1, 0)) map[0][maxX + 1].addZustand(WALL);
-        if (isInMap(0, maxY + 1)) map[maxY + 1][0].addZustand(WALL);
+        if (!getFeld(hunterPos[0],0).getZustaende().contains(WALL)) addZustand(hunterPos[0],0,WALL);
 
+        if (!getFeld(0,hunterPos[1]).getZustaende().contains(WALL)) addZustand(0,hunterPos[1],WALL);
+
+        if (getFeld(hunterPos[0]+1,getHunterPos()[1]).getZustaende().contains(WALL)) addZustand(hunterPos[0]+1,0,WALL);
+
+    }
+
+    public void umrande(){
+        int maxX = wandGrenzeX();
+        int maxY = wandGrenzeY();
 
         //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
         if (maxX > 5 && maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
@@ -176,10 +180,22 @@ public class Welt {
             for (int i = 0; i <= maxY; i++) {
                 addZustand(maxX, i, WALL);
             }
-        }*/
+        }
+
+        //map reduzieren
+        Feld tmp[][] = new Feld[maxX+1][maxY+1];
+
+        for (int i = 0; i < tmp.length; i++) {
+            for (int j = 0; j < tmp[0].length; j++) {
+                tmp[i][j] = map[i][j];
+            }
+        }
+        map = tmp;
+
     }
 
     public boolean isUmrandet() {
+
         int maxX = wandGrenzeX();
         int maxY = wandGrenzeY();
 
@@ -208,7 +224,7 @@ public class Welt {
 
         return umrandet;
 
-        //ToDo: Map nicht 2 unnötige Spalten breit erweitern
+
     }
 
     public Feld getFeld(int[] pos) {
@@ -435,7 +451,6 @@ public class Welt {
             f.removeZustand(GESTANK3);
             f.removeZustand(GESTANK2);
             f.removeZustand(GESTANK1);
-            f.removeZustand(EVTFALLE);
 
             i++;
         }
@@ -495,6 +510,17 @@ public class Welt {
                     default:
                         System.out.print("[" + risiko + "] ");
                 }
+            }
+            System.out.println();
+        }
+    }
+
+    public void displayBesucht() {
+        for (int i = 0; i < map.length; i++) {
+            for (int z = 0; z < map[0].length; z++) {
+                boolean besucht = map[i][z].isBesucht();
+                if (besucht) System.out.print("[T] ");
+                else System.out.print("[F] ");
             }
             System.out.println();
         }

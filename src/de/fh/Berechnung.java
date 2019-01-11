@@ -21,7 +21,7 @@ public class Berechnung {
         this.welt = welt;
         zielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99);
         zwischenfeld = new Feld(Feld.Zustand.UNBEKANNT, -88, -88);
-        modus = "standard";
+        modus = "umrande";
     }
 
     //Hauptmethode die aufgerufen wird
@@ -35,35 +35,48 @@ public class Berechnung {
 
         // ---------------------- Abfragen vor Berechnungsbeginn:
         {
-            if (zielfeldErreicht) zielfeld = welt.getFeld(-1, -1);
-            if (zwischenfeldErreicht) zwischenfeld = welt.getFeld(-1, -1);
-
-            //Wenn Hunter sich am Ziel befindet: boolean Zielerreicht auf true setzen
-            if (welt.getHunterFeld() == zielfeld) {
-                setZielfeldErreicht();
+            if (modus != "goldAufnehmen"){
+                if (welt.isUmrandet()) {
+                    if (welt.isGoldAufgesammelt()) {
+                        if (welt.isWumpusLebendig()) modus = "wumpusToeten";
+                        else modus = "goldAufgenommenUndWumpusTot";
+                    } else {
+                        modus = "standard";
+                    }
+                } else {
+                    if (zielfeldErreicht) modus = "umrande";
+                    if (zielfeld == welt.getFeld(2,1)){
+                        welt.umrande();
+                        if (!welt.isUmrandet()) modus="aufgeben";
+                        else modus = "standard";
+                    }
+                }
             }
 
-            if (welt.isGoldAufgesammelt()) {
-                setZielfeld(welt.getFeld(1, 1));
+            //Attribute/Zustände wieder richtig setzen
+            {
+                //Wenn Hunter sich am Ziel befindet: boolean Zielerreicht auf true setzen
+                if (welt.getHunterFeld() == zielfeld) {
+                    if(debug) System.out.println("Hunter befindet sich auf Zielposition!");
+                    setZielfeldErreicht();
+                }
+
+                //Wenn Hunter eingekesselt, Attribute auf True damit neue Ziele bestimmt werden
+                if (welt.isEingekesselt(welt.getHunterFeld(), 69)) {
+                    setZielfeldErreicht();
+                    setZwischenfeldErreicht();
+                }
+
+                if (zielfeldErreicht) zielfeld = welt.getFeld(-1, -1);
+                if (zwischenfeldErreicht) zwischenfeld = welt.getFeld(-1, -1);
             }
 
-            //if(welt.isGoldAufgesammelt() && welt.isWumpusLebendig()) modus = "wumpusToeten";
-
-            if (welt.isEingekesselt(welt.getHunterFeld(), 69)) {
-                setZielfeldErreicht();
-                setZwischenfeldErreicht();
-                ;
-            }
 
             //Wenn der Hunter von Gestank eingekesselt ist und Wumpus lebendig ist, soll versucht werden
             //den Wumpus zu töten
             if (welt.isWumpusLebendig() && welt.isVonGestankEingekesselt() && welt.getAnzahlPfeile() > 0) {
                 if (debug) System.out.println("Berechnung setzt Modus auf Wumpus töten!");
                 modus = "wumpusToeten";
-            }
-
-            if (!welt.isUmrandet() && zielfeldErreicht) {
-                modus = "umrande";
             }
         }
 
@@ -74,45 +87,29 @@ public class Berechnung {
             switch (modus) {
                 case "umrande":
                     this.umrande(69);
-
-                case "checkEcke":
-                    if (!welt.isUmrandet() && zielfeldErreicht) {
-                        if (welt.getHunterPos()[1] == 1 && (welt.getBlickrichtung() == Welt.Himmelsrichtung.EAST || welt.getBlickrichtung() == Welt.Himmelsrichtung.WEST)
-                                && !welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1).isBesucht()) {
-                            setZielfeld(welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1));
-                            if (debug) System.out.println("Zielfeld durch Ecke 1: " + zielfeld);
-                        } else if ((welt.getBlickrichtung() == Welt.Himmelsrichtung.EAST || welt.getBlickrichtung() == Welt.Himmelsrichtung.WEST)
-                                && !welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1).isBesucht()) {
-                            setZielfeld(welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1));
-                            if (debug) System.out.println("Zielfeld durch Ecke 2: " + zielfeld);
-                        } else if ((welt.getHunterPos()[0] == 1 && (welt.getBlickrichtung() == Welt.Himmelsrichtung.SOUTH || welt.getBlickrichtung() == Welt.Himmelsrichtung.NORTH))
-                                && !welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]).isBesucht()) {
-                            setZielfeld(welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1]));
-                            if (debug) System.out.println("Zielfeld durch Ecke 3: " + zielfeld);
-                        } else if ((welt.getBlickrichtung() == Welt.Himmelsrichtung.SOUTH || welt.getBlickrichtung() == Welt.Himmelsrichtung.NORTH)
-                                && !welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]).isBesucht()) {
-                            setZielfeld(welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]));
-                            if (debug) System.out.println("Zielfeld durch Ecke 4: " + zielfeld);
-                        }
-                        //welt.wandErgaenzen();
-                    }
-                    modus = "standard";
                     break;
 
                 case "goldAufnehmen":
                     nextAction = HunterAction.GRAB;
                     System.out.println("Gold gefunden!");
-                    modus = "goldAufgenommen";
+                    if (welt.isWumpusLebendig()) modus = "standard";
+                    else modus = "goldAufgenommenUndWumpusTot";
+
                     break;
 
-                case "goldAufgenommen":
+                case "goldAufgenommenUndWumpusTot":
                     //Hunter soll zum Start laufen, wenn er das Gold aufgenommen hat
-                    setZielfeld(welt.getFeld(1, 1));
+                    zielfeld = welt.getFeld(1, 1);
+                    if (welt.getHunterFeld() != zielfeld) zielfeldErreicht = false;
                     break;
 
                 case "wumpusToeten":
                     nextAction = wumpusToeten();
                     modus = "standard";
+                    break;
+
+                case "aufgeben":
+                    nextAction = HunterAction.QUIT_GAME;
                     break;
 
             }
@@ -200,6 +197,8 @@ public class Berechnung {
             System.out.println("Nächste berechnete Aktion: " + nextAction);
             welt.addNextAction(nextAction);
             System.out.println(" ----------------- ENDE BERECHNUNGSAUSGABE ----------------- ");
+
+            if (nextAction == HunterAction.QUIT_GAME) welt.displayBesucht();
         }
 
     }
@@ -211,82 +210,116 @@ public class Berechnung {
         //Vorgehensweise: eine Runde komplett am Rand entlang laufen
         Feld f;
 
+        if (debug) System.out.println("<<<<<<<<UMRANDE>>>>>>>>");
         switch (umrandeModus) {
             case 1: //nach UL
+                if(debug) System.out.println("Modus UL");
+
                 //1. nach links gehen
-                if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
+                if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    if (debug) System.out.println("Case1 links");
+                }
 
-                    //2. nach unten gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1)).isBesucht()) && f.getRisiko() < maxRisiko)
+                //2. nach unten gehen
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    if (debug) System.out.println("Case1 unten");
+                }
 
-                    //3. nach rechts gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
-                    setZielfeld(f);
 
-                    //4. nach oben gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko)
+                //3. nach rechts gehen
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    umrandeModus = 2;
+                    if (debug) System.out.println("Case1 rechts");
+                }
+
+
+                //4. nach oben gehen
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko) {
+                    setZielfeld(f);
+                    if (debug) System.out.println("Case1 oben");
+                }
+
                 break;
 
             case 2: //nach UR
+                if(debug) System.out.println("Modus UR");
                 //1. nach unten gehen
-                if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1)).isBesucht()) && f.getRisiko() < maxRisiko)
+                if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    umrandeModus = 1;
+                }
 
-                    //2. nach rechts gehen
+                //2. nach rechts gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
                     setZielfeld(f);
 
                     //3. nach oben gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko)
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    umrandeModus = 3;
+                }
 
-                    //4.. nach links gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
+                //4.. nach links gehen
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko){
                     setZielfeld(f);
+                    umrandeModus = 4;
+                }
+
                 break;
 
             case 3: //nach OR
-                //1. nach rechts gehen
-                if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
-                    setZielfeld(f);
+                if(debug) System.out.println("Modus OR");
 
-                    //2. nach oben gehen
+                //1. nach rechts gehen
+                if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko) {
+                    umrandeModus = 2;
+                    setZielfeld(f);
+                }
+
+                //2. nach oben gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko)
                     setZielfeld(f);
 
                     //3.. nach links gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko) {
+                    umrandeModus = 4;
                     setZielfeld(f);
+                }
 
-                    //4. nach unten gehen
+                //4. nach unten gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1)).isBesucht()) && f.getRisiko() < maxRisiko)
                     setZielfeld(f);
                 break;
 
+
             case 4: //nach OL
+                if(debug) System.out.println("Modus OL");
+
                 //1. nach oben gehen
-                if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko)
+                if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    umrandeModus = 3;
+                }
 
                 //2. nach links gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
                     setZielfeld(f);
 
-                //3. nach unten gehen
+                    //3. nach unten gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1)).isBesucht()) && f.getRisiko() < maxRisiko)
                     setZielfeld(f);
 
-                //4.. nach rechts gehen
+                    //4.. nach rechts gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1])).isBesucht()) && f.getRisiko() < maxRisiko)
                     setZielfeld(f);
 
                 break;
         }
 
-
+        if (debug) System.out.println("<<<<<<<<ENDE>>>>>>>>");
     }
 
     private HunterAction bestimmeZielUndZwischenziel() {
@@ -322,7 +355,7 @@ public class Berechnung {
             //Wenn Schleife komplett durchgelaufen ist, und für das aktuelle Zielfeld kein zwischenFeld gefunden hat: versuchen neues Zielfeld zu ermitteln &
             //nicht erneut versuchen dieses Feld zu erreichen
             if (gefunden) break;
-            zielfeld.setBesucht();
+            //zielfeld.setBesucht();
             setZielfeldErreicht();
             bestimmeNaechstesZielFeld(i);
         }
@@ -628,7 +661,7 @@ public class Berechnung {
                     return welt.getFeld(x, y - m);
                 }
 
-                if (debug) System.out.println("suche unbekanntes eingekesselt 1. Schleife");
+                //if (debug) System.out.println("suche unbekanntes eingekesselt 1. Schleife");
                 //weitere Felder prüfen
                 for (int i = 1; i <= m; i++) {
                     if (welt.isInMap(x + m, y + i) && !welt.getFeld(x + m, y + i).isBesucht() && welt.getFeld(x + m, y + i).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y + i, maxRisiko)) {
@@ -644,7 +677,7 @@ public class Berechnung {
                         return welt.getFeld(x - m, y - i);
                     }
                 }
-                if (debug) System.out.println("suche unbekanntes eingekesselt 2. Schleife");
+                //if (debug) System.out.println("suche unbekanntes eingekesselt 2. Schleife");
 
                 for (int i = 1; i <= m; i++) {
                     if (welt.isInMap(x + i, y + m) && !welt.getFeld(x + i, y + m).isBesucht() && welt.getFeld(x + i, y + m).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y + m, maxRisiko)) {
