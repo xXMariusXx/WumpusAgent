@@ -60,7 +60,7 @@ public class Welt {
     }
 
     public void addZustand(int x, int y, Zustand z) {
-        if (x <= 0 || y <= 0 || ((x >= map[0].length || y >= map.length) && isUmrandet())) return;
+        if (x < 0 || y < 0 || ((x >= map[0].length || y >= map.length) && isUmrandet())) return;
 
         //Map automatisch vergrößern, wenn Feld noch nicht vorhanden
         if (x >= map[0].length || y >= map.length) {
@@ -106,7 +106,7 @@ public class Welt {
 
         //Wenn Hunter sich bewegt hat nach Möglichkeit weitere Wände ergänzen
         if (z == HUNTER) {
-            this.wandErgaenzen();
+            //this.wandErgaenzen();
         }
         checkWumpusWandGefahr(x, y, z);
 
@@ -148,13 +148,25 @@ public class Welt {
     public void wandErgaenzen() {
         int maxX = wandGrenzeX();
         int maxY = wandGrenzeY();
-        //fehlende Umrandung auf X und Y Achse ergänzen, wenn Map vergrößert wird.
+
+        System.out.println("Wand ergänzen aufgerufen!");
+        if (hunterPos[0] == 1 && getFeld(hunterPos[0],hunterPos[1]+1).getZustaende().contains(WALL)) {
+            System.out.println("Eckenwand UL wird hinzugefügt");
+            addZustand(hunterPos[0]-1,hunterPos[1]+1,WALL);
+        }
+
+        if (hunterPos[1] == 1 && getFeld(hunterPos[0]+1,hunterPos[1]).getZustaende().contains(WALL)) {
+            System.out.println("Eckenwand OR wird hinzugefügt");
+            addZustand(hunterPos[0]+1,hunterPos[1]-1,WALL);
+        }
+
+        /*//fehlende Umrandung auf X und Y Achse ergänzen, wenn Map vergrößert wird.
         if (isInMap(maxX + 1, 0)) map[0][maxX + 1].addZustand(WALL);
         if (isInMap(0, maxY + 1)) map[maxY + 1][0].addZustand(WALL);
 
 
         //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
-        if (maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
+        if (maxX > 5 && maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
                 && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
             //Zeile auf Höhe maxY vervollständigen
             for (int i = 0; i <= maxX; i++) {
@@ -164,7 +176,7 @@ public class Welt {
             for (int i = 0; i <= maxY; i++) {
                 addZustand(maxX, i, WALL);
             }
-        }
+        }*/
     }
 
     public boolean isUmrandet() {
@@ -314,6 +326,11 @@ public class Welt {
         }
         System.err.println("Fehler beim Feldzugriff!");
         return null;
+    }
+
+    public boolean eckeUlBekannt(){
+        return ((getFeld(0,wandGrenzeY()+1).getZustaende().contains(WALL) || getFeld(0,wandGrenzeY()).getZustaende().contains(WALL)) &&
+                (getFeld(1,wandGrenzeY()+1).getZustaende().contains(WALL)));
     }
 
 

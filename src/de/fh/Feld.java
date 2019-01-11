@@ -164,9 +164,13 @@ public class Feld {
         return beschossen;
     }
 
+    public boolean isGueltig(){
+        return position[0] > -1 && position[1] > -1;
+    }
+
     @Override
     public String toString() {
-        return getPosition()[0] + "," + getPosition()[1] + " " + getZustaende() + " " + getRisiko();
+        return getPosition()[0] + "," + getPosition()[1] + " " + getZustaende() + " " + getRisiko() + ", beschossen:" + isBeschossen() + ", besucht:" + isBesucht();
     }
 
     //Interne Methoden

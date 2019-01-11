@@ -10,10 +10,6 @@ import java.util.Map;
 
 import static de.fh.Feld.Zustand.*;
 
-/*
- * DIESE KLASSE VERÄNDERN SIE BITTE NUR AN DEN GEKENNZEICHNETEN STELLEN
- * wenn die Bonusaufgabe bewertet werden soll.
- */
 public class MyAgent extends WumpusHunterAgent {
 
     HunterPercept percept;
@@ -61,7 +57,6 @@ public class MyAgent extends WumpusHunterAgent {
 
         // ---- Hunter Stats setzen ----
         this.updateHunterStats();
-
 
         // ---- Wind auswerten ----
         if (percept.isBreeze()) {
@@ -115,9 +110,11 @@ public class MyAgent extends WumpusHunterAgent {
             System.out.println("Wind bemerkt");
         }
 
+        System.out.println("Anzahl übriger Pfeile: " + welt.getAnzahlPfeile());
+
         //Gibt aus ob ein Nachbarfeld eine Wand ist
         if (percept.isBump()) {
-            //System.out.println("Ein Nachbarfeld ist Wand");
+            System.out.println("Ein Nachbarfeld ist Wand");
         }
 
         //Gib aus wenn aktuelle Position = Gold
@@ -284,9 +281,9 @@ public class MyAgent extends WumpusHunterAgent {
 
             case BUMPED_INTO_WALL:
                 welt.wandErgaenzen();
-                berechnung.setModus("checkEcke");
+                //berechnung.setModus("checkEcke");
                 berechnung.setZielfeldErreicht();
-                welt.getLastAction();
+                welt.removeLastAction();
                 switch (welt.getBlickrichtung()) {
                     case EAST:
                         welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], WALL);
@@ -301,7 +298,6 @@ public class MyAgent extends WumpusHunterAgent {
                         welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, WALL);
                         break;
                 }
-                welt.removeLastAction();
                 break;
 
             case GOLD_FOUND:
@@ -316,6 +312,21 @@ public class MyAgent extends WumpusHunterAgent {
             case NO_MORE_SHOOTS:
                 System.err.println("Keine Pfeile mehr! Fehler in Berechnung!");
                 break;
+        }
+
+        //Wand auswerten
+        if (percept.isBump()){
+            //System.out.println("isBump wird ausgewertet!");
+            if (welt.getHunterPos()[0] == 1) {
+                System.out.println("Bump Fall1 - Wand links ergänzen");
+                welt.addZustand(0,welt.getHunterPos()[1],WALL);
+                welt.wandErgaenzen();
+            }
+            else if (welt.getHunterPos()[1] == 1){
+                System.out.println("Bump Fall2 - Wand oben ergänzen");
+                welt.addZustand(welt.getHunterPos()[0],0,WALL);
+                welt.wandErgaenzen();
+            }
         }
     }
 

@@ -18,8 +18,8 @@ public class ASternSuche {
         this.start = start;
         this.ziel = ziel;
         this.welt = welt;
-        if (true) System.out.println("Startfeld:    " + start);
-        if (true) System.out.println("Zielfeld:     " + ziel);
+        if (true) System.out.println("A*Startfeld:    " + start);
+        if (true) System.out.println("A*Zielfeld:     " + ziel);
 
     }
 
@@ -101,7 +101,6 @@ public class ASternSuche {
     }
 
     private void expandiereKnoten(Knoten f) {
-        //if (welt.isUmrandet()) {
             if (welt.isInMap(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]))
                 berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
             if (welt.isInMap(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]))
@@ -110,14 +109,6 @@ public class ASternSuche {
                 berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
             if (welt.isInMap(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1))
                 berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
-       // } else {
-          //  berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] + 1, f.getFeld().getPosition()[1]), f);
-           // berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0] - 1, f.getFeld().getPosition()[1]), f);
-          //  berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] + 1), f);
-          //  berechneNachfolger(welt.getFeld(f.getFeld().getPosition()[0], f.getFeld().getPosition()[1] - 1), f);
-       // }
-
-
     }
 
     private void berechneNachfolger(Feld neuesFeld, Knoten vorgaenger) {
