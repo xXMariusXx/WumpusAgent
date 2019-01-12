@@ -1,7 +1,9 @@
 package de.fh;
 
 import java.util.HashSet;
+import java.util.Hashtable;
 import java.util.LinkedList;
+import java.util.Map;
 
 import de.fh.Feld.Zustand;
 import de.fh.wumpus.enums.HunterAction;
@@ -27,6 +29,9 @@ public class Welt {
     private boolean wumpusLebendig = true;
     private int punkte = 1000;
     private boolean umrandet = false;
+    private Hashtable<Integer, Integer> stenchRadarBefore;
+    private Hashtable<Integer, Integer> stenchRadarAfter;
+
 
 
     enum Himmelsrichtung {
@@ -74,17 +79,17 @@ public class Welt {
 
             // Spalte + Zeile hinzufügen
             if (x >= map[0].length && y >= map.length) {
-                System.out.println("Feld um X und Y erweitern:" + x +","+y );
+                //System.out.println("Feld um X und Y erweitern:" + x +","+y );
                 tmp = new Feld[y + 1][x + 1];
             }
             // Spalte hinzufügen
             else if (x >= map[0].length) {
-                System.out.println("Feld um X erweitern:" + x +","+y );
+                //System.out.println("Feld um X erweitern:" + x +","+y );
                 tmp = new Feld[map.length][x + 1];
             }
             //Zeile hinzufügen
             else {
-                System.out.println("Feld um Y erweitern:" + x +","+y );
+                //System.out.println("Feld um Y erweitern:" + x +","+y );
                 tmp = new Feld[y + 1][map[0].length];
             }
 
@@ -174,9 +179,8 @@ public class Welt {
         int maxX = wandGrenzeX();
         int maxY = wandGrenzeY();
 
-        //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
-        //if (maxX > 5 && maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
-             //   && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
+
+        if(maxX > 5 && maxY > 5){
             //Zeile auf Höhe maxY vervollständigen
             for (int i = 0; i <= maxX; i++) {
                 addZustand(i, maxY, WALL);
@@ -185,7 +189,8 @@ public class Welt {
             for (int i = 0; i <= maxY; i++) {
                 addZustand(maxX, i, WALL);
             }
-        //}
+        }
+
 
         //map reduzieren
         Feld tmp[][] = new Feld[maxX+1][maxY+1];
@@ -414,7 +419,7 @@ public class Welt {
     }
 
     public void setWumpusGetoetet() {
-        wumpusLebendig = false;
+        //Gestank in der Map löschen
         for (int i = 0; i < map[0].length; i++) {
             for (int j = 0; j < map.length; j++) {
                 map[j][i].removeZustand(GESTANK3);
@@ -424,10 +429,29 @@ public class Welt {
             }
         }
 
+        int wumpiiD = -1;
+
+
+        for (Map.Entry<Integer, Integer> g : stenchRadarBefore.entrySet()){
+            if (!stenchRadarAfter.contains(g)) {
+                wumpiiD = g.getKey();
+                break;
+            }
+        }
+        System.out.println("Wumpus mit der ID getötet: " + wumpiiD);
+
+        for (Wumpus w:wumpiList)
+        {
+            if (w.getId() == wumpiiD){
+                w.setLebendig(false);
+                break;
+            }
+        }
     }
 
     public boolean isWumpusLebendig() {
-        return wumpusLebendig;
+        for (Wumpus w : wumpiList) if (w.isLebendig()) return true;
+        return false;
     }
 
     public int getAnzahlPfeile() {
@@ -463,7 +487,6 @@ public class Welt {
     }
 
     public void pfeilGeschossen() {
-        removePunkte(10);
         anzahlPfeile--;
     }
 
@@ -495,6 +518,17 @@ public class Welt {
 
     public void berechneWumpusPosition(){
 
+    }
+
+
+    // ---- Wumpus Zeugs ----
+
+    public void setStenchRadarBefore(Hashtable<Integer, Integer> stenchRadarBefore) {
+        this.stenchRadarBefore = stenchRadarBefore;
+    }
+
+    public void setStenchRadarAfter(Hashtable<Integer, Integer> stenchRadarAfter) {
+        this.stenchRadarAfter = stenchRadarAfter;
     }
 
 

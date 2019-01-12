@@ -12,7 +12,7 @@ public class Berechnung {
     private boolean zielfeldErreicht = true; //muss auf False gesetzt werden, wenn ein neues Ziel bestimmt wurde
     private Feld zwischenfeld;
     private boolean zwischenfeldErreicht = true; //muss auf False gesetzt werden, wenn ein neues Zwischen-Ziel bestimmt wurde
-    private boolean debug = true;
+    private boolean debug = false;
     private int umrandeModus = 1;
 
     private final int zielFaelle = 6;
@@ -46,7 +46,7 @@ public class Berechnung {
                     if(welt.getPunkte() == 0) modus = "aufgeben";
                 } else {
                     if (zielfeldErreicht) modus = "umrande";
-                    if (zielfeld == welt.getFeld(2,1)){
+                    if (zielfeld == welt.getFeld(2,1) && modus.equalsIgnoreCase("umrande")){
                         welt.umrande();
                         if (!welt.isUmrandet()) modus="aufgeben";
                         else modus = "standard";
@@ -199,8 +199,6 @@ public class Berechnung {
             System.out.println("Nächste berechnete Aktion: " + nextAction);
             welt.addNextAction(nextAction);
             System.out.println(" ----------------- ENDE BERECHNUNGSAUSGABE ----------------- ");
-
-            if (nextAction == HunterAction.QUIT_GAME) welt.displayBesucht();
         }
 
     }
@@ -778,7 +776,6 @@ public class Berechnung {
         if (debug) System.out.println("Feld in Blickrichtung: " + feldInBlickrichtung);
         if ((feldInBlickrichtung.getZustaende().contains(GESTANK1) || feldInBlickrichtung.getZustaende().contains(GESTANK2)) && !feldInBlickrichtung.isBeschossen()) {
             if (debug) System.out.println("Schießen in Blickrichtung");
-            welt.pfeilGeschossen();
             return HunterAction.SHOOT;
         }
 
