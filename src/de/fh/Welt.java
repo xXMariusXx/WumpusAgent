@@ -20,8 +20,9 @@ public class Welt {
 
     // ---- Hunter Stats ----
     private int[] hunterPos = new int[2]; //[0] = X-Wert, [1] = Y-Wert
+    private LinkedList<Wumpus> wumpiList;
     private Himmelsrichtung blickrichtung;
-    private int anzahlPfeile = 5;
+    private int anzahlPfeile = 100;
     private boolean goldAufgesammelt = false;
     private boolean wumpusLebendig = true;
     private int punkte = 1000;
@@ -43,6 +44,7 @@ public class Welt {
 
         nextActionList = new LinkedList<HunterAction>();
         lastActionList = new LinkedList<HunterAction>();
+        wumpiList = new LinkedList<>();
 
         map[0][0] = new Feld(WALL, 0, 0);
         map[0][1] = new Feld(WALL, 1, 0);
@@ -55,8 +57,11 @@ public class Welt {
 
 
     // ----Welt Zeugs ----
-    public HashSet<Feld.Zustand> getZustaende(int x, int y) {
-        return map[y][x].getZustaende();
+
+    public void addWumpus(int id){
+        boolean vorhanden = false;
+        for (Wumpus w: wumpiList) if (w.getId() == id) vorhanden = true;
+        if(!vorhanden) wumpiList.add(new Wumpus(id));
     }
 
     public void addZustand(int x, int y, Zustand z) {
@@ -170,8 +175,8 @@ public class Welt {
         int maxY = wandGrenzeY();
 
         //Wenn die Ecke unten rechts aus einer Wand besteht, vollstädigen Wand Rahmen um die Map erzeugen
-        if (maxX > 5 && maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
-                && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
+        //if (maxX > 5 && maxX > 5 && (maxY > 5 && map[maxY - 1][maxX].getZustaende().contains(WALL) || map[maxY - 2][maxX].getZustaende().contains(WALL))
+             //   && (map[maxY][maxX - 1].getZustaende().contains(WALL) || map[maxY][maxX - 2].getZustaende().contains(WALL))) {
             //Zeile auf Höhe maxY vervollständigen
             for (int i = 0; i <= maxX; i++) {
                 addZustand(i, maxY, WALL);
@@ -180,7 +185,7 @@ public class Welt {
             for (int i = 0; i <= maxY; i++) {
                 addZustand(maxX, i, WALL);
             }
-        }
+        //}
 
         //map reduzieren
         Feld tmp[][] = new Feld[maxX+1][maxY+1];
@@ -344,11 +349,13 @@ public class Welt {
         return null;
     }
 
-    public boolean eckeUlBekannt(){
-        return ((getFeld(0,wandGrenzeY()+1).getZustaende().contains(WALL) || getFeld(0,wandGrenzeY()).getZustaende().contains(WALL)) &&
-                (getFeld(1,wandGrenzeY()+1).getZustaende().contains(WALL)));
+    public void setAnzahlPfeile(int anzahlPfeile) {
+        this.anzahlPfeile = anzahlPfeile;
     }
 
+    public int getPunkte() {
+        return punkte;
+    }
 
     // ---- Aktion Zeugs ----
     public HunterAction getLastAction() {
@@ -404,7 +411,6 @@ public class Welt {
     public void setGoldGesammelt() {
         goldAufgesammelt = true;
         removeZustand(getHunterPos()[0], getHunterPos()[1], GOLD);
-        addPunkte(100);
     }
 
     public void setWumpusGetoetet() {
@@ -417,7 +423,7 @@ public class Welt {
                 map[j][i].removeZustand(EVTWUMPUS);
             }
         }
-        addPunkte(100);
+
     }
 
     public boolean isWumpusLebendig() {
@@ -513,6 +519,7 @@ public class Welt {
             }
             System.out.println();
         }
+        System.out.println();
     }
 
     public void displayBesucht() {

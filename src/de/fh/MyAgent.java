@@ -65,8 +65,6 @@ public class MyAgent extends WumpusHunterAgent {
             welt.addZustand(welt.getHunterPos()[0]-1, welt.getHunterPos()[1], EVTFALLE);
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]+1, EVTFALLE);
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]-1, EVTFALLE);
-
-            //ToDo evt prüfen ob Falle genauer eingegrenzt werden kann!
         }
 
         // ---- Gold setzen ----
@@ -84,7 +82,14 @@ public class MyAgent extends WumpusHunterAgent {
         if (percept.isRumble() && !stenchRadar.isEmpty())  berechnung.setZwischenfeldErreicht();
 
 
-        if (!stenchRadar.isEmpty()) this.gestankAuswerten();
+        if (!stenchRadar.isEmpty()) {
+            for (Map.Entry<Integer, Integer> g : stenchRadar.entrySet()) {
+                welt.addWumpus(g.getKey());
+            }
+            System.out.println();
+            this.gestankAuswerten();
+        }
+
         System.out.println("....................................ENDE WELT AKTUALISIEREN...................");
 
         // -------- AKTUELLEN STAND AUSGEBEN --------
@@ -192,8 +197,18 @@ public class MyAgent extends WumpusHunterAgent {
         berechnung.berechne();
         HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
-        System.out.println("\nRisiko Tabelle nach Berechnung");
-        welt.displayRisiko();
+        if (nextHunterAction == HunterAction.QUIT_GAME){
+            System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!SPIEL ENDE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
+            welt.displayRisiko();
+            System.out.println("restlicher Punktestand: " + welt.getPunkte());
+            System.out.println("Anzahl abgefeuerter Pfeile: " + (500-welt.getAnzahlPfeile()));
+            System.out.println("alle Wumpi getötet: " + welt.isWumpusLebendig());
+            System.out.println("Gold gefunden: " + welt.isGoldAufgesammelt());
+
+
+        }
+        //System.out.println("\nRisiko Tabelle nach Berechnung");
+        //welt.displayRisiko();
         System.out.println("________________________________________________________________________________________________________________________________________________________________________________");
         return nextHunterAction;
     }
@@ -203,9 +218,9 @@ public class MyAgent extends WumpusHunterAgent {
     private void updateHunterStats() {
         switch (actionEffect) {
             case MOVEMENT_SUCCESSFUL:
-                welt.removePunkte(1);
                 switch (welt.getLastAction()) {
                     case SHOOT:
+                        welt.removePunkte(10);
                         switch (welt.getBlickrichtung()) {
                             case EAST:
                                 //Löscht 3 Wumpus Gefahren in der Map von Position des Hunters in Blick/Pfeilrichtung
@@ -224,6 +239,7 @@ public class MyAgent extends WumpusHunterAgent {
                         break;
 
                     case GO_FORWARD:
+                        welt.removePunkte(1);
                         switch (welt.getBlickrichtung()) {
                             case EAST:
                                 welt.updateHunterPos(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1]);
@@ -241,6 +257,7 @@ public class MyAgent extends WumpusHunterAgent {
                         break;
 
                     case TURN_RIGHT:
+                        welt.removePunkte(1);
                         switch (welt.getBlickrichtung()) {
                             case SOUTH:
                                 welt.setBlickrichtung(Welt.Himmelsrichtung.WEST);
@@ -258,6 +275,7 @@ public class MyAgent extends WumpusHunterAgent {
                         break;
 
                     case TURN_LEFT:
+                        welt.removePunkte(1);
                         switch (welt.getBlickrichtung()) {
                             case SOUTH:
                                 welt.setBlickrichtung(Welt.Himmelsrichtung.EAST);
@@ -300,15 +318,16 @@ public class MyAgent extends WumpusHunterAgent {
 
             case GOLD_FOUND:
                 welt.setGoldGesammelt();
-                //berechnung.setModus("goldAufgenommen");
+                welt.addPunkte(100);
                 break;
 
             case WUMPUS_KILLED:
                 welt.setWumpusGetoetet();
+                welt.addPunkte(100);
                 break;
 
             case NO_MORE_SHOOTS:
-                System.err.println("Keine Pfeile mehr! Fehler in Berechnung!");
+                welt.setAnzahlPfeile(-1);
                 break;
         }
 

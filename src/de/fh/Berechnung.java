@@ -43,6 +43,7 @@ public class Berechnung {
                     } else {
                         modus = "standard";
                     }
+                    if(welt.getPunkte() == 0) modus = "aufgeben";
                 } else {
                     if (zielfeldErreicht) modus = "umrande";
                     if (zielfeld == welt.getFeld(2,1)){
@@ -134,6 +135,7 @@ public class Berechnung {
                 //wenn das aktuelle Ziel erreicht und das Gold bereits aufgesammelt wurde: Spiel beenden
                 else if (zielfeldErreicht && welt.getHunterFeld() == welt.getFeld(1, 1) && welt.isGoldAufgesammelt()) {
                     if (debug) System.out.println("Sonderfall Gold");
+                    welt.addPunkte(100);
                     nextAction = HunterAction.QUIT_GAME;
                 }
 
