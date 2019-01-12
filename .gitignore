@@ -148,6 +148,10 @@ lib/openJFX/lib/src.zip
 out/production/WumpusAgent/de/fh/Feld$1.class
 out/production/WumpusAgent/de/fh/Feld$Zustand.class
 out/production/WumpusAgent/de/fh/Feld.class
+out/production/WumpusAgent/de/fh/Berechnung.class
+out/production/WumpusAgent/de/fh/ASternSuche.class
+out/production/WumpusAgent/de/fh/Knoten.class
+out/production/WumpusAgent/de/fh/Vector.class
 out/production/WumpusAgent/de/fh/MyAgent$1.class
 out/production/WumpusAgent/de/fh/MyAgent.class
 out/production/WumpusAgent/de/fh/Welt$Himmelsrichtung.class
