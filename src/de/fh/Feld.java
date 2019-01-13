@@ -44,19 +44,10 @@ public class Feld {
     }
 
 
-    //Konstruktoren
-    public Feld(HashSet<Zustand> tmp, int x, int y) {
-        set = new HashSet<Zustand>();
-        tmp.forEach(this::addZustand);
-        position = new int[2];
-        position[0] = x;
-        position[1] = y;
 
-    }
-
-    public Feld(Zustand z, int x, int y) {
+    public Feld(Zustand z, int x, int y,boolean besuchtSetzen) {
         set = new HashSet<Zustand>();
-        addZustand(z);
+        addZustand(z,besuchtSetzen);
         position = new int[2];
         position[0] = x;
         position[1] = y;
@@ -64,12 +55,13 @@ public class Feld {
 
 
     //Getter und Setter
-    public void addZustand(Zustand z) {
+    public void addZustand(Zustand z, boolean besuchtSetzen) {
         switch (z) {
             case GESTANK1:
                 //wenn schon stärkerer Gestank vorhanden ist, muss der schwächere nicht hinzugefügt werden
                 if (set.contains(Zustand.GESTANK2)) set.remove(Zustand.GESTANK2);
                 if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
+                if (set.contains(Zustand.WALL)) break;
                 if (isBesucht()){
                     set.add(Zustand.GESTANK2);
                     return;
@@ -80,6 +72,7 @@ public class Feld {
             case GESTANK2:
                 if (set.contains(Zustand.GESTANK1)) break;
                 if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
+                if (set.contains(Zustand.WALL)) break;
                 if (isBesucht()){
                     set.add(Zustand.GESTANK1);
                     return;
@@ -89,6 +82,7 @@ public class Feld {
 
             case GESTANK3:
                 if (set.contains(Zustand.GESTANK3) || set.contains(Zustand.GESTANK2)) break;
+                if (set.contains(Zustand.WALL)) break;
                 if (isBesucht()) return;
                 set.add(z);
                 break;
@@ -106,7 +100,7 @@ public class Feld {
                 set.remove(Zustand.EVTFALLE);
                 set.remove(Zustand.EVTWUMPUS);
                 set.add(z);
-                setBesucht();
+                if(besuchtSetzen) setBesucht();
                 break;
 
             case EVTFALLE:
@@ -116,8 +110,13 @@ public class Feld {
                 setBesucht();
                 break;
 
-            default:
+            case EVTWUMPUS:
+                if (set.contains(Zustand.WALL)) break;
                 set.add(z);
+                break;
+
+            default:
+
         }
         set.remove(Zustand.UNBEKANNT);
 
@@ -142,6 +141,10 @@ public class Feld {
 
     public void setBesucht() {
         besucht = true;
+    }
+
+    public void setNichtBesucht() {
+        besucht = false;
     }
 
     public boolean isBesucht() {

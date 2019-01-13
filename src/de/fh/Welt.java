@@ -51,10 +51,10 @@ public class Welt {
         lastActionList = new LinkedList<HunterAction>();
         wumpiList = new LinkedList<>();
 
-        map[0][0] = new Feld(WALL, 0, 0);
-        map[0][1] = new Feld(WALL, 1, 0);
-        map[1][0] = new Feld(WALL, 0, 1);
-        map[1][1] = new Feld(HUNTER, 1, 1);
+        map[0][0] = new Feld(WALL, 0, 0,true);
+        map[0][1] = new Feld(WALL, 1, 0,true);
+        map[1][0] = new Feld(WALL, 0, 1,true);
+        map[1][1] = new Feld(HUNTER, 1, 1,false);
         hunterPos[0] = 1;
         hunterPos[1] = 1;
         blickrichtung = Himmelsrichtung.EAST;
@@ -69,7 +69,7 @@ public class Welt {
         if(!vorhanden) wumpiList.add(new Wumpus(id));
     }
 
-    public void addZustand(int x, int y, Zustand z) {
+    public void addZustand(int x, int y, Zustand z, boolean besuchtSetzen) {
         if (x < 0 || y < 0 || ((x >= map[0].length || y >= map.length) && isUmrandet())) return;
 
         //Map automatisch vergrößern, wenn Feld noch nicht vorhanden
@@ -96,11 +96,11 @@ public class Welt {
             //automatisch mit-angelegte Felder erzeugen
             for (int a = 0; a < tmp.length; a++) {
                 for (int b = 0; b < tmp[0].length; b++) {
-                    tmp[a][b] = new Feld(UNBEKANNT, b, a);
+                    tmp[a][b] = new Feld(UNBEKANNT, b, a,besuchtSetzen);
                 }
             }
             //neuen Zustand speichern
-            tmp[y][x] = new Feld(z, x, y);
+            tmp[y][x] = new Feld(z, x, y,besuchtSetzen);
             //Map kopieren
             for (int i = 0; i < map.length; i++) {
                 for (int j = 0; j < map[0].length; j++) {
@@ -111,14 +111,14 @@ public class Welt {
             map = tmp;
 
         } else {
-            map[y][x].addZustand(z);
+            map[y][x].addZustand(z,besuchtSetzen);
         }
 
         //Wenn Hunter sich bewegt hat nach Möglichkeit weitere Wände ergänzen
         if (z == HUNTER) {
             this.wandErgaenzen();
         }
-        checkWumpusWandGefahr(x, y, z);
+        checkWumpusWandGefahr(x, y, z,besuchtSetzen);
 
 
     }
@@ -135,7 +135,7 @@ public class Welt {
         //X Wert bis wohin die Map aus Wand besteht
 
         for (int i = 0; i < map[0].length; i++) {
-            if (getFeld(i, 0).getZustaende().contains(WALL)) {
+            if (getFeld(i, 0,true).getZustaende().contains(WALL)) {
                 maxX++;
             }
         }
@@ -147,7 +147,7 @@ public class Welt {
         int maxY = 0;
         //Y Wert bis wohin die Map aus Wand besteht
         for (int i = 0; i < map.length; i++) {
-            if (getFeld(0, i).getZustaende().contains(WALL)) {
+            if (getFeld(0, i,true).getZustaende().contains(WALL)) {
                 maxY++;
             }
         }
@@ -157,21 +157,21 @@ public class Welt {
 
     public void wandErgaenzen() {
         System.out.println("Wand ergänzen aufgerufen!");
-        if (hunterPos[0] == 1 && getFeld(hunterPos[0],hunterPos[1]+1).getZustaende().contains(WALL)) {
+        if (hunterPos[0] == 1 && getFeld(hunterPos[0],hunterPos[1]+1,true).getZustaende().contains(WALL)) {
             System.out.println("Eckenwand UL wird hinzugefügt");
-            addZustand(hunterPos[0]-1,hunterPos[1]+1,WALL);
+            addZustand(hunterPos[0]-1,hunterPos[1]+1,WALL,true);
         }
 
-        if (hunterPos[1] == 1 && getFeld(hunterPos[0]+1,hunterPos[1]).getZustaende().contains(WALL)) {
+        if (hunterPos[1] == 1 && getFeld(hunterPos[0]+1,hunterPos[1],true).getZustaende().contains(WALL)) {
             System.out.println("Eckenwand OR wird hinzugefügt");
-            addZustand(hunterPos[0]+1,hunterPos[1]-1,WALL);
+            addZustand(hunterPos[0]+1,hunterPos[1]-1,WALL,true);
         }
 
-        if (!getFeld(hunterPos[0],0).getZustaende().contains(WALL)) addZustand(hunterPos[0],0,WALL);
+        if (!getFeld(hunterPos[0],0,true).getZustaende().contains(WALL)) addZustand(hunterPos[0],0,WALL,true);
 
-        if (!getFeld(0,hunterPos[1]).getZustaende().contains(WALL)) addZustand(0,hunterPos[1],WALL);
+        if (!getFeld(0,hunterPos[1],true).getZustaende().contains(WALL)) addZustand(0,hunterPos[1],WALL,true);
 
-        if (getFeld(hunterPos[0]+1,getHunterPos()[1]).getZustaende().contains(WALL)) addZustand(hunterPos[0]+1,0,WALL);
+        if (getFeld(hunterPos[0]+1,getHunterPos()[1],true).getZustaende().contains(WALL)) addZustand(hunterPos[0]+1,0,WALL,true);
 
     }
 
@@ -183,11 +183,11 @@ public class Welt {
         if(maxX > 5 && maxY > 5){
             //Zeile auf Höhe maxY vervollständigen
             for (int i = 0; i <= maxX; i++) {
-                addZustand(i, maxY, WALL);
+                addZustand(i, maxY, WALL,true);
             }
             //Spalte maxX vervollständigen
             for (int i = 0; i <= maxY; i++) {
-                addZustand(maxX, i, WALL);
+                addZustand(maxX, i, WALL,true);
             }
         }
 
@@ -206,6 +206,8 @@ public class Welt {
 
     public boolean isUmrandet() {
 
+        if (umrandet) return true;
+
         int maxX = wandGrenzeX();
         int maxY = wandGrenzeY();
 
@@ -215,40 +217,35 @@ public class Welt {
         }
 
         for (int i = 0; i <= maxX; i++) {
-            if (!getFeld(i, maxY).getZustaende().contains(WALL)) {
+            if (!getFeld(i, maxY,true).getZustaende().contains(WALL)) {
                 umrandet = false;
                 return umrandet;
             }
         }
 
         for (int i = 0; i <= maxY; i++) {
-            if (!getFeld(maxX, i).getZustaende().contains(WALL)) {
+            if (!getFeld(maxX, i,true).getZustaende().contains(WALL)) {
                 umrandet = false;
                 return umrandet;
             }
         }
         umrandet = true;
 
-
-
-
         return umrandet;
-
-
     }
 
-    public Feld getFeld(int[] pos) {
-        return getFeld(pos[0], pos[1]);
+    public Feld getFeld(int[] pos, boolean besuchtSetzen) {
+        return getFeld(pos[0], pos[1],besuchtSetzen);
     }
 
-    public Feld getFeld(int x, int y) {
+    public Feld getFeld(int x, int y,boolean besuchtSetzen) {
         if (x >= 0 && y >= 0 && x < map[0].length && y < map.length) return map[y][x];
         //map vergrößern solange sie noch nicht umrandet ist, falls das geforderte Feld nicht innerhalb der Map liegt
         if ((x >= map[0].length || y >= map.length) && x >= 0 && y >= 0 && !isUmrandet()) {
-            addZustand(x, y, UNBEKANNT);
-            return getFeld(x, y);
+            addZustand(x, y, UNBEKANNT,besuchtSetzen);
+            return getFeld(x, y,besuchtSetzen);
         }
-        return new Feld(UNBEKANNT, -55, -55);
+        return new Feld(UNBEKANNT, -55, -55,true);
 
     }
 
@@ -276,51 +273,73 @@ public class Welt {
         punkte -= i;
     }
 
-    public boolean isEingekesselt(int x, int y, int maxRisiko){
-        return isEingekesselt(getFeld(x,y),maxRisiko);
+    public boolean isEingekesselt(int x, int y, int maxRisiko,boolean besuchtSetzen){
+        return isEingekesselt(getFeld(x,y,besuchtSetzen),maxRisiko,besuchtSetzen);
     }
 
-    public boolean isEingekesselt(Feld f, int maxRisiko){
+    public boolean isEingekesselt(Feld f, int maxRisiko, boolean besuchtSetzen){
         int i = 0;
         int x = f.getPosition()[0];
         int y = f.getPosition()[1];
 
-        if (isInMap(x+1, y) && getFeld(x+1, y).getRisiko() > maxRisiko){
+        if (isInMap(x+1, y) && getFeld(x+1, y,besuchtSetzen).getRisiko() > maxRisiko){
             i++;
             //System.out.println("Eingekessel von: " + (hunterPos[0]+1) + "," + hunterPos[1]);
         }
 
-        if (isInMap(x-1, y) && getFeld(x-1, y).getRisiko() > maxRisiko) {
+        if (isInMap(x-1, y) && getFeld(x-1, y,besuchtSetzen).getRisiko() > maxRisiko) {
             i++;
             //System.out.println("Eingekessel von: " + (hunterPos[0]-1) + "," + hunterPos[1]);
         }
 
-        if (isInMap(x, y+1) && getFeld(x, y+1).getRisiko() > maxRisiko) {
+        if (isInMap(x, y+1) && getFeld(x, y+1,besuchtSetzen).getRisiko() > maxRisiko) {
             i++;
            // System.out.println("Eingekessel von: " + (hunterPos[0]) + "," + (hunterPos[1]+1));
         }
 
-        if (isInMap(x, y-1) && getFeld(x, y-1).getRisiko() > maxRisiko){
+        if (isInMap(x, y-1) && getFeld(x, y-1,besuchtSetzen).getRisiko() > maxRisiko){
             i++;
             //System.out.println("Eingekessel von: " + (hunterPos[0]) + "," + (hunterPos[1]-1));
         }
 
-        if (i > 2) return true;
+        if (i > 1) return true;
+        //Eventuell i = 2 setzen
 
         return false;
     }
 
-    public boolean isVonGestankEingekesselt(){
+    public boolean isVonGestankEingekesselt(boolean besuchtSetzen){
         int i = 0;
-        if (isInMap(hunterPos[0]+1, hunterPos[1]) && (getFeld(hunterPos[0]+1, hunterPos[1]).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0]+1, hunterPos[1]).getZustaende().contains(EVTWUMPUS))) i++;
-        if (isInMap(hunterPos[0]-1, hunterPos[1]) && (getFeld(hunterPos[0]-1, hunterPos[1]).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0]-1, hunterPos[1]).getZustaende().contains(EVTWUMPUS))) i++;
-        if (isInMap(hunterPos[0], hunterPos[1]+1) && (getFeld(hunterPos[0], hunterPos[1]+1).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]+1).getZustaende().contains(EVTWUMPUS))) i++;
-        if (isInMap(hunterPos[0], hunterPos[1]-1) && (getFeld(hunterPos[0], hunterPos[1]-1).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]-1).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0]+1, hunterPos[1]) && (getFeld(hunterPos[0]+1, hunterPos[1],besuchtSetzen).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0]+1, hunterPos[1],besuchtSetzen).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0]-1, hunterPos[1]) && (getFeld(hunterPos[0]-1, hunterPos[1],besuchtSetzen).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0]-1, hunterPos[1],besuchtSetzen).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0], hunterPos[1]+1) && (getFeld(hunterPos[0], hunterPos[1]+1,besuchtSetzen).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]+1,besuchtSetzen).getZustaende().contains(EVTWUMPUS))) i++;
+        if (isInMap(hunterPos[0], hunterPos[1]-1) && (getFeld(hunterPos[0], hunterPos[1]-1,besuchtSetzen).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]-1,besuchtSetzen).getZustaende().contains(EVTWUMPUS))) i++;
         if (i > 1) return true;
         return false;
     }
 
-    public boolean isInBlickrichtung(Feld f){
+    public int anzahlBesuchterFelder(){
+        int anzahl = 0;
+        for (int i = 0; i < map.length; i++) {
+            for (int z = 0; z < map[0].length; z++) {
+                boolean besucht = map[i][z].isBesucht();
+                if (besucht) anzahl++;
+            }
+        }
+        return anzahl;
+    }
+
+    public int anzahlFelder(){
+        int anzahl = 0;
+        for (int i = 0; i < map.length; i++) {
+            for (int z = 0; z < map[0].length; z++) {
+                anzahl++;
+            }
+        }
+        return anzahl;
+    }
+
+    /*public boolean isInBlickrichtung(Feld f){
         switch (blickrichtung) {
             case EAST:
                 if (getFeld(hunterPos[0] + 1, hunterPos[1]) == f) return true;
@@ -337,18 +356,18 @@ public class Welt {
             default:
                 return false;
         }
-    }
+    }*/
 
-    public Feld getFeldInBlickrichtung(){
+    public Feld getFeldInBlickrichtung(boolean besuchtSetzen){
         switch (blickrichtung) {
             case EAST:
-                return getFeld(hunterPos[0] + 1, hunterPos[1]);
+                return getFeld(hunterPos[0] + 1, hunterPos[1],besuchtSetzen);
             case SOUTH:
-                return getFeld(hunterPos[0], hunterPos[1] + 1);
+                return getFeld(hunterPos[0], hunterPos[1] + 1,besuchtSetzen);
             case WEST:
-                return getFeld(hunterPos[0] - 1, hunterPos[1]);
+                return getFeld(hunterPos[0] - 1, hunterPos[1],besuchtSetzen);
             case NORTH:
-                return getFeld(hunterPos[0], hunterPos[1] - 1);
+                return getFeld(hunterPos[0], hunterPos[1] - 1,besuchtSetzen);
         }
         System.err.println("Fehler beim Feldzugriff!");
         return null;
@@ -388,11 +407,11 @@ public class Welt {
 
 
     // ---- Hunter/Stats Zeugs ----
-    public void updateHunterPos(int x, int y) {
+    public void updateHunterPos(int x, int y, boolean besuchtSetzen) {
         //Hunter an alter Position aus Map löschen
         removeZustand(hunterPos[0], hunterPos[1], HUNTER);
         //Hunter an neuer Position in Map setzen
-        addZustand(x, y, HUNTER);
+        addZustand(x, y, HUNTER,besuchtSetzen);
         hunterPos[0] = x;
         hunterPos[1] = y;
     }
@@ -402,7 +421,7 @@ public class Welt {
     }
 
     public Feld getHunterFeld() {
-        return getFeld(hunterPos[0], hunterPos[1]);
+        return getFeld(hunterPos[0], hunterPos[1],true);
     }
 
     public Himmelsrichtung getBlickrichtung() {
@@ -458,22 +477,22 @@ public class Welt {
         return anzahlPfeile;
     }
 
-    public void removeWumpusGefahr(){
-        Feld f = getFeld(hunterPos[0],hunterPos[1]);
+    public void removeWumpusGefahr(boolean besuchtSetzen){
+        Feld f = getFeld(hunterPos[0],hunterPos[1],besuchtSetzen);
         int i = 0;
         while(i < 3){
             switch (blickrichtung) {
                 case EAST:
-                    f = getFeld(hunterPos[0] + i, hunterPos[1]);
+                    f = getFeld(hunterPos[0] + i, hunterPos[1],besuchtSetzen);
                     break;
                 case SOUTH:
-                    f= getFeld(hunterPos[0], hunterPos[1] + i);
+                    f= getFeld(hunterPos[0], hunterPos[1] + i,besuchtSetzen);
                     break;
                 case WEST:
-                    f= getFeld(hunterPos[0] - i, hunterPos[1]);
+                    f= getFeld(hunterPos[0] - i, hunterPos[1],besuchtSetzen);
                     break;
                 case NORTH:
-                    f= getFeld(hunterPos[0], hunterPos[1] - i);
+                    f= getFeld(hunterPos[0], hunterPos[1] - i,besuchtSetzen);
                     break;
             }
 
@@ -494,24 +513,24 @@ public class Welt {
         return goldAufgesammelt;
     }
 
-    public void checkWumpusWandGefahr(int x, int y, Zustand z) {
+    public void checkWumpusWandGefahr(int x, int y, Zustand z, boolean besuchtSetzen) {
         //Wenn Gestank 1 Feld entfernt von einer Wand gesetzt werden soll, riskante Felder markieren
         if (z == GESTANK3 || z == GESTANK2 || z == GESTANK1) {
-            if (getFeld(x, y - 2).getZustaende().contains(WALL)) {
-                addZustand(x - 1, y - 1, EVTWUMPUS);
-                addZustand(x + 1, y - 1, EVTWUMPUS);
+            if (getFeld(x, y - 2,besuchtSetzen).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y - 1, EVTWUMPUS,besuchtSetzen);
+                addZustand(x + 1, y - 1, EVTWUMPUS,besuchtSetzen);
             }
-            if (getFeld(x, y + 2).getZustaende().contains(WALL)) {
-                addZustand(x - 1, y + 1, EVTWUMPUS);
-                addZustand(x + 1, y + 1, EVTWUMPUS);
+            if (getFeld(x, y + 2,besuchtSetzen).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y + 1, EVTWUMPUS,besuchtSetzen);
+                addZustand(x + 1, y + 1, EVTWUMPUS,besuchtSetzen);
             }
-            if (getFeld(x + 2, y).getZustaende().contains(WALL)) {
-                addZustand(x + 1, y - 1, EVTWUMPUS);
-                addZustand(x + 1, y + 1, EVTWUMPUS);
+            if (getFeld(x + 2, y,besuchtSetzen).getZustaende().contains(WALL)) {
+                addZustand(x + 1, y - 1, EVTWUMPUS,besuchtSetzen);
+                addZustand(x + 1, y + 1, EVTWUMPUS,besuchtSetzen);
             }
-            if (getFeld(x - 2, y - 2).getZustaende().contains(WALL)) {
-                addZustand(x - 1, y - 1, EVTWUMPUS);
-                addZustand(x - 1, y + 1, EVTWUMPUS);
+            if (getFeld(x - 2, y - 2,besuchtSetzen).getZustaende().contains(WALL)) {
+                addZustand(x - 1, y - 1, EVTWUMPUS,besuchtSetzen);
+                addZustand(x - 1, y + 1, EVTWUMPUS,besuchtSetzen);
             }
         }
     }
@@ -560,8 +579,16 @@ public class Welt {
         for (int i = 0; i < map.length; i++) {
             for (int z = 0; z < map[0].length; z++) {
                 boolean besucht = map[i][z].isBesucht();
-                if (besucht) System.out.print("[T] ");
-                else System.out.print("[F] ");
+                if (map[i][z].getZustaende().contains(HUNTER)){
+                    if (besucht) System.out.print("(T) ");
+                    else System.out.print("(F) ");
+                }
+                else{
+                    if (besucht) System.out.print("[T] ");
+                    else System.out.print("[F] ");
+                }
+
+
             }
             System.out.println();
         }
