@@ -158,3 +158,17 @@ out/production/WumpusAgent/de/fh/Welt$Himmelsrichtung.class
 out/production/WumpusAgent/de/fh/Welt.class
 Server.jar
 WumpusAgent.iml
+*.wl
+out/production/WumpusAgent/de/fh/ASternSuche.class
+*.class
+out/production/WumpusAgent/de/fh/ASternSuche.class
+out/production/WumpusAgent/de/fh/Berechnung$1.class
+out/production/WumpusAgent/de/fh/Berechnung.class
+out/production/WumpusAgent/de/fh/Vector.class
+out/production/WumpusAgent/de/fh/Welt$1.class
+*.class
+out/production/WumpusAgent/de/fh/ASternSuche.class
+out/production/WumpusAgent/de/fh/Berechnung$1.class
+out/production/WumpusAgent/de/fh/Berechnung.class
+out/production/WumpusAgent/de/fh/Vector.class
+out/production/WumpusAgent/de/fh/Welt$1.class
