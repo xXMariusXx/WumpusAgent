@@ -273,11 +273,11 @@ public class Welt {
         punkte -= i;
     }
 
-    public boolean isEingekesselt(int x, int y, int maxRisiko,boolean besuchtSetzen){
-        return isEingekesselt(getFeld(x,y,besuchtSetzen),maxRisiko,besuchtSetzen);
+    public boolean isEingekesselt(int x, int y, int maxRisiko,boolean besuchtSetzen, int anzahlEinkesselndeFelder){
+        return isEingekesselt(getFeld(x,y,besuchtSetzen),maxRisiko,besuchtSetzen, anzahlEinkesselndeFelder);
     }
 
-    public boolean isEingekesselt(Feld f, int maxRisiko, boolean besuchtSetzen){
+    public boolean isEingekesselt(Feld f, int maxRisiko, boolean besuchtSetzen, int anzahlEinkesselndeFelder){
         int i = 0;
         int x = f.getPosition()[0];
         int y = f.getPosition()[1];
@@ -302,8 +302,7 @@ public class Welt {
             //System.out.println("Eingekessel von: " + (hunterPos[0]) + "," + (hunterPos[1]-1));
         }
 
-        if (i > 1) return true;
-        //Eventuell i = 2 setzen
+        if (i >= anzahlEinkesselndeFelder) return true;
 
         return false;
     }
@@ -316,6 +315,20 @@ public class Welt {
         if (isInMap(hunterPos[0], hunterPos[1]-1) && (getFeld(hunterPos[0], hunterPos[1]-1,besuchtSetzen).getZustaende().contains(GESTANK1) || getFeld(hunterPos[0], hunterPos[1]-1,besuchtSetzen).getZustaende().contains(EVTWUMPUS))) i++;
         if (i > 1) return true;
         return false;
+    }
+
+    public Feld getFeldHinterMir(){
+        switch (blickrichtung){
+            case EAST:
+                return getFeld(hunterPos[0]-1,hunterPos[1],true);
+            case WEST:
+                return getFeld(hunterPos[0]+1,hunterPos[1],true);
+            case SOUTH:
+                return getFeld(hunterPos[0],hunterPos[1]-1,true);
+            case NORTH:
+                return getFeld(hunterPos[0],hunterPos[1]+1,true);
+        }
+        return new Feld(UNBEKANNT,-50,-50,false);
     }
 
     public int anzahlBesuchterFelder(){
