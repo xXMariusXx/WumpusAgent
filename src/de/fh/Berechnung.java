@@ -2,6 +2,8 @@ package de.fh;
 
 import de.fh.wumpus.enums.HunterAction;
 
+import java.util.HashSet;
+
 import static de.fh.Feld.Zustand.*;
 //TODO verstecken in einer Ecke verhindern
 //TODO Vom Wumpus getötet werden wenn beide gleichzeitig aufs gleiche Feld gehen
@@ -17,6 +19,7 @@ public class Berechnung {
     private boolean zielfeldErreicht; //muss auf False gesetzt werden, wenn ein neues Ziel bestimmt wurde
     private Feld zwischenfeld;
     private boolean zwischenfeldErreicht; //muss auf False gesetzt werden, wenn ein neues Zwischen-Ziel bestimmt wurde
+    private HashSet<Feld> nichtErreichbareFelder;
 
     private boolean besuchtSetzen;
 
@@ -40,6 +43,7 @@ public class Berechnung {
     //--------------------------------------------------------------------------------------------------------------------
     public void berechne() {
         HunterAction nextAction = HunterAction.SIT;
+        nichtErreichbareFelder = new HashSet<Feld>();
 
         // ---------------------- Start Ausgabe:
         {
@@ -124,7 +128,7 @@ public class Berechnung {
             //Zusätzliche Aktionen die in bestimmten Fällen ausgeführt werden sollen
             System.out.println("aktueller Modus: " + modus);
             switch (modus) {
-                case "umrande":
+                case "umrande": //bestimmt nächstes Ziel
                     this.umrande(69);
                     break;
 
@@ -158,14 +162,13 @@ public class Berechnung {
             }
         }
 
-        // ---------------------- Standardfälle:
+        // ---------------------- Standardfall:
         {
             //Wenn nextAction im Switch noch nicht überschrieben wurde
             if (nextAction == HunterAction.SIT) {
                 if (debug) System.out.println("Standardfall:");
                 nextAction = bestimmeZielUndZwischenziel();
             }
-
         }
 
         // ---------------------- Ende Ausgabe:
@@ -396,12 +399,12 @@ public class Berechnung {
         for (i = start; i <= zielFaelle; i++) {
             bestimmeNaechstesZielFeld(i);
             //Schleife hört auf wenn alle Testfälle durch gelaufen sind, oder ein Feld innerhalb der Map gefunden wurde, oder
-            if (welt.isInMap(zielfeld) && !welt.isInLetzteBesuchteFelder(zielfeld, 3)) break;
+            if (welt.isInMap(zielfeld) && !welt.isInLetzteBesuchteFelder(zielfeld, 3) && !nichtErreichbareFelder.contains(zielfeld)) break;
         }
 
         if (debug && !welt.isInMap(zielfeld))
             System.out.println("BNZFA:: es konnte kein neues Hauptziel bestimmt werden! " + zielfeld);
-        else if (debug) System.out.println("BNZFA:: neues Hauptziel in Case " + (i - 1) + " gefunden: " + zielfeld);
+        else if (debug) System.out.println("BNZFA:: neues Hauptziel in Case " + (i) + " gefunden: " + zielfeld);
         return (i - 1);
     }
 
@@ -699,8 +702,11 @@ public class Berechnung {
 
         }
 
-        if (debug && !welt.isInMap(zwischenfeld))
-            System.out.println("BNZWFA:: es konnte kein neues Zwischenziel zum aktuellen Hauptziel bestimmt werden! " + zwischenfeld);
+        if (debug && !welt.isInMap(zwischenfeld)){
+            System.out.println("BNZWFA:: es konnte kein neues Zwischenziel zum aktuellen Hauptziel bestimmt werden! ");
+            nichtErreichbareFelder.add(zielfeld);
+        }
+
         else if (debug)
             System.out.println("BNZWFA:: neues Zwischenziel in Case " + (i - 1) + " gefunden: " + zwischenfeld);
     }
