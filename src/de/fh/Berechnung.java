@@ -53,7 +53,7 @@ public class Berechnung {
                     modus = "umrande";
                     // }
                     //Wenn Hunter nach einer Runde wieder auf Feld 1,1 kommt: Map umranden
-                    if (zielfeld == welt.getFeld(1, 1, besuchtSetzen) && modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() > 10) {
+                    if (zielfeld == welt.getFeld(1, 1, besuchtSetzen) && welt.getFeld(1,1,besuchtSetzen) == welt.getHunterFeld() && modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() > 10) {
                         welt.umrande();
                         //Wenn das umranden der Map nicht geklappt hat
                         if (!welt.isUmrandet() && welt.getHunterFeld().isBesucht()) {
@@ -75,7 +75,7 @@ public class Berechnung {
                 }
 
                 //Wenn Hunter eingekesselt, Attribute auf True damit neue Ziele bestimmt werden
-                if (welt.isEingekesselt(welt.getHunterFeld(), 69, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isEingekesselt(welt.getHunterFeld(), 69, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     setZielfeldErreicht();
                     setZwischenfeldErreicht();
                 }
@@ -98,17 +98,23 @@ public class Berechnung {
             else besuchtSetzen = true;
             if (debug) System.out.println("besucht setzen: " + besuchtSetzen);
 
-            if(modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() == 15){
-                welt.getFeld(1,1,besuchtSetzen).setNichtBesucht();
-                welt.getFeld(2,1,besuchtSetzen).setNichtBesucht();
-                welt.getFeld(3,1,besuchtSetzen).setNichtBesucht();
-                welt.getFeld(1,2,besuchtSetzen).setNichtBesucht();
-                welt.getFeld(2,2,besuchtSetzen).setNichtBesucht();
-                welt.getFeld(3,2,besuchtSetzen).setNichtBesucht();
+            if (modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() == 15) {
+                welt.getFeld(1, 1, besuchtSetzen).setNichtBesucht();
+                welt.getFeld(2, 1, besuchtSetzen).setNichtBesucht();
+                welt.getFeld(3, 1, besuchtSetzen).setNichtBesucht();
+                welt.getFeld(1, 2, besuchtSetzen).setNichtBesucht();
+                welt.getFeld(2, 2, besuchtSetzen).setNichtBesucht();
+                welt.getFeld(3, 2, besuchtSetzen).setNichtBesucht();
             }
 
             //Wenn das aktuelle Feld von EVTFALLE eingekesselt wurde, da besuchtSetzen auf false war, da Modus auf WumpusTöten war: Feld hinter mir löschen
-            if (welt.isEingekesselt(welt.getHunterFeld(),90,besuchtSetzen,4)) welt.getFeldHinterMir().removeZustand(EVTFALLE);
+            if (welt.isEingekesselt(welt.getHunterFeld(), 90, besuchtSetzen, 4))
+                welt.getFeldHinterMir().removeZustand(EVTFALLE);
+
+            if (welt.isInLetzteBesuchteFelder(zielfeld,3)) {
+                zielfeldErreicht = false;
+                zielfeld = welt.getFeld(-1,-1,false);
+            }
         }
 
         // ---------------------- Switch Modus:
@@ -154,7 +160,7 @@ public class Berechnung {
                 if (zielfeldErreicht && !welt.isGoldAufgesammelt()) {
                     if (debug) System.out.println("Standardfall 1: Ziel erreicht");
                     nextAction = bestimmeZielUndZwischenziel();
-                    if (nextAction == HunterAction.GRAB) //wenn Ziel und Zwischenziel erfolgreich gesetzt wurden
+                    if (nextAction == HunterAction.GRAB) //wenn Ziel und Zwischenziel erfolgreich gesetzt wurden (Grab wurde missbraucht)
                     {
                         nextAction = bestimmeWegZumFeld();
                     }
@@ -174,7 +180,7 @@ public class Berechnung {
                     if (debug) System.out.println("Standardfall 2: Ziel NICHT erreicht\nZielfeld: " + zielfeld);
                     //wenn das aktuelle Ziel nicht in der Map liegt (z.B. wenn das Ziel schon länger besteht, die Welt aber mittlerweile umrandet ist)
                     //Neues Ziel bestimmen (wie in Standardfall 1)
-                    if (!welt.isInMap(zielfeld)) {
+                    if (!welt.isInMap(zielfeld) || welt.isInLetzteBesuchteFelder(zielfeld,3)) {
                         zielfeldErreicht = false;
                         zielfeld = welt.getFeld(-1, -1, besuchtSetzen);
                         nextAction = bestimmeZielUndZwischenziel();
@@ -190,21 +196,28 @@ public class Berechnung {
                             //Schleife die probiert zu aktuell gesetztem Zielfeld ein zwischenFeld zu finden
                             for (int z = 0; z < 4; z++) {
                                 bestimmeNaechstesZwischenFeld(z);
-                                if (welt.isInMap(zwischenfeld)) {
-                                    if (i < 3) {
-                                        if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                                if (welt.isInMap(zwischenfeld) && !welt.isInLetzteBesuchteFelder(zwischenfeld,3)) {
+                                    if (!modus.equalsIgnoreCase("umrande")) {
+                                        if (i < 3) {
+                                            if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen, anzahlEinkesselndeFelder)) {
+                                                gefunden = true;
+                                                break;
+                                            } else if (debug)
+                                                System.out.println("Zwischenziel ist eingekesselt obwohl nicht eingekesselte Lösung gesucht: " + zwischenfeld);
+                                        } else {
                                             gefunden = true;
                                             break;
                                         }
-                                        else if(debug) System.out.println("Zwischenziel ist eingekesselt obwohl nicht eingekesselte Lösung gesucht: " + zwischenfeld);
-                                    } else {
+                                    }
+                                    else {
                                         gefunden = true;
                                         break;
                                     }
+
                                 }
                             }//Wenn Schleife komplett durchgelaufen ist, und für das aktuelle Zielfeld kein zwischenFeld gefunden hat: versuchen neues Zielfeld zu ermitteln
                             if (gefunden) break;
-                            zwischenfeld = welt.getFeld(-1,-1,false);
+                            zwischenfeld = welt.getFeld(-1, -1, false);
                             bestimmeNaechstesZielFeld(i);
                         }
 
@@ -223,8 +236,14 @@ public class Berechnung {
 
                 //SONST
                 //z.B. zielfeldErreicht && Gold aufgesammelt, aber da im Modus "umrande", noch kein neues Zielfeld bekannt
-                else{
-                    bestimmeZielUndZwischenziel();
+                else {
+                    if (welt.isUmrandet()) {
+                        setZielfeldErreicht();
+                    } else {
+                        umrande(69);
+                        if (zielfeldErreicht) setZielfeld(welt.getFeld(-50, -50, false));
+                    }
+
                 }
             }
         }
@@ -245,7 +264,7 @@ public class Berechnung {
         //Vorgehensweise: eine Runde komplett am Rand entlang laufen
         Feld f;
 
-        if (debug) System.out.println("<<<<<<<<UMRANDE>>>>>>>>");
+        //if (debug) System.out.println("<<<<<<<<UMRANDE>>>>>>>>");
         switch (umrandeModus) {
             case 1: //nach UL
                 if (debug) System.out.println("Modus UL");
@@ -272,10 +291,11 @@ public class Berechnung {
 
 
                 //4. nach oben gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
+                else if ((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).getRisiko() < maxRisiko) {
                     setZielfeld(f);
                     if (debug) System.out.println("Case1 oben");
                     umrandeModus = 3;
+                    //ToDo mit Dokument abgleichen
                 }
 
                 break;
@@ -285,23 +305,31 @@ public class Berechnung {
                 //1. nach unten gehen
                 if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
-                    umrandeModus = 1;
+                    if (debug) System.out.println("Case2 unten");
+                    if (welt.wandGrenzeY() <= welt.getHunterPos()[0]) umrandeModus = 1;
                 }
 
                 //2. nach rechts gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko)
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
+                    if (debug) System.out.println("Case2 rechts");
+                }
 
-                    //3. nach oben gehen
+
+                //3. nach oben gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
                     umrandeModus = 3;
+                    if (debug) System.out.println("Case2 oben");
+
                 }
 
                 //4.. nach links gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
+                else if ((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).getRisiko() < maxRisiko) {
                     setZielfeld(f);
-                    //umrandeModus = 4;
+                    umrandeModus = 3;
+                    if (debug) System.out.println("Case2 links");
+
                 }
 
                 break;
@@ -313,21 +341,28 @@ public class Berechnung {
                 if (!((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     umrandeModus = 2;
                     setZielfeld(f);
+                    if (debug) System.out.println("Case3 rechts");
                 }
 
                 //2. nach oben gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko)
-                    setZielfeld(f);
-
-                    //3.. nach links gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
-                    umrandeModus = 4;
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
+                    if (debug) System.out.println("Case3 oben");
                     setZielfeld(f);
                 }
 
-                //4. nach unten gehen
-                else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko)
+                //3.. nach links gehen
+                else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
+                    umrandeModus = 4;
                     setZielfeld(f);
+                    if (debug) System.out.println("Case3 links");
+                }
+
+                //4. nach unten gehen
+                else if ((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht()) {
+                    if (debug) System.out.println("Case3 unten");
+                    setZielfeld(f);
+                }
+
                 break;
 
 
@@ -337,25 +372,34 @@ public class Berechnung {
                 //1. nach oben gehen
                 if ((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht()) {
                     setZielfeld(f);
+
                     umrandeModus = 3;
+                    if (debug) System.out.println("Case4 oben");
+
                 }
 
                 //2. nach links gehen
-                else if ((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht())
+                else if ((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht()) {
+                    if (debug) System.out.println("Case4 links");
                     setZielfeld(f);
+                }
 
                 //3. nach unten gehen
-                else if ((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht())
+                else if ((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht()) {
+                    if (debug) System.out.println("Case4 unten");
                     setZielfeld(f);
+                }
 
                 //4.. nach rechts gehen
-                else if ((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht())
+                else if ((f = welt.getFeld(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], besuchtSetzen)).getRisiko() < maxRisiko && !f.isBesucht()) {
+                    if (debug) System.out.println("Case4 rechts");
                     setZielfeld(f);
+                }
 
                 break;
         }
 
-        if (debug) System.out.println("<<<<<<<<ENDE>>>>>>>>");
+        //if (debug) System.out.println("<<<<<<<<ENDE>>>>>>>>");
     }
 
     private HunterAction bestimmeZielUndZwischenziel() {
@@ -376,9 +420,9 @@ public class Berechnung {
             //Schleife die probiert zu aktuell gesetztem Zielfeld ein zwischenFeld zu finden
             for (int z = 0; z < 4; z++) {
                 bestimmeNaechstesZwischenFeld(z);
-                if (welt.isInMap(zwischenfeld)) {
+                if (welt.isInMap(zwischenfeld) && !welt.isInLetzteBesuchteFelder(zwischenfeld,3)) {
                     if (z < 3) {
-                        if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                        if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen, anzahlEinkesselndeFelder)) {
                             gefunden = true;
                             break;
                         }
@@ -446,10 +490,12 @@ public class Berechnung {
     private void aufrufBestimmeNaechstesZielFeld(int start) {
         //BestimmteNaechstesZielfeld der Reihe nach abklappern bis Zielfeld gefunden oder keine Möglichkeit mehr
         int i;
-        for (i = start; i <= zielFaelle && !welt.isInMap(zielfeld); i++) {
+        for (i = start; i <= zielFaelle && (!welt.isInMap(zielfeld) || welt.isInLetzteBesuchteFelder(zielfeld,3)); i++) {
             bestimmeNaechstesZielFeld(i);
         }
         if (debug) System.out.println("BNZFA hat Ziel in Case gefunden: " + (i - 1));
+        zwischenfeldErreicht = true;
+        zwischenfeld = welt.getFeld(-1,-1,false);
     }
 
     private void bestimmeNaechstesZielFeld(int punkt) {
@@ -548,25 +594,25 @@ public class Berechnung {
         //Sucht das nächste Feld von Position x,y ausgehend mit maximalem Risiko von maxRisiko
         for (int m = 1; m < Math.max(welt.getMapSize()[0], welt.getMapSize()[1]); m++) {
             if (eingekesselt) {
-                if (welt.isInMap(welt.getFeldInBlickrichtung(besuchtSetzen)) && welt.getFeldInBlickrichtung(besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(welt.getFeldInBlickrichtung(besuchtSetzen), maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(welt.getFeldInBlickrichtung(besuchtSetzen)) && welt.getFeldInBlickrichtung(besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(welt.getFeldInBlickrichtung(besuchtSetzen), maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug)
                         System.out.println("suche eingekesselt = Feld in Blickrichtung: " + welt.getFeldInBlickrichtung(besuchtSetzen));
                     return welt.getFeldInBlickrichtung(besuchtSetzen);
                 }
                 // 4 direkt erreichbare Felder prüfen
-                if (welt.isInMap(x + m, y) && welt.getFeld(x + m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x + m, y) && welt.getFeld(x + m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche eingekessel: " + (x + m) + "," + y);
                     return welt.getFeld(x + m, y, besuchtSetzen);
                 }
-                if (welt.isInMap(x - m, y) && welt.getFeld(x - m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x - m, y) && welt.getFeld(x - m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche eingekessel: " + (x - m) + "," + y);
                     return welt.getFeld(x - m, y, besuchtSetzen);
                 }
-                if (welt.isInMap(x, y + m) && welt.getFeld(x, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y + m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x, y + m) && welt.getFeld(x, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y + m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche eingekessel: " + x + "," + (y + m));
                     return welt.getFeld(x, y + m, besuchtSetzen);
                 }
-                if (welt.isInMap(x, y - m) && welt.getFeld(x, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y - m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x, y - m) && welt.getFeld(x, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y - m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche eingekessel: " + x + m + "," + (y - m));
                     return welt.getFeld(x, y - m, besuchtSetzen);
                 }
@@ -574,30 +620,30 @@ public class Berechnung {
 
                 //weitere Felder prüfen
                 for (int i = 1; i <= m; i++) {
-                    if (welt.isInMap(x + m, y + i) && welt.getFeld(x + m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y + i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + m, y + i) && welt.getFeld(x + m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y + i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + m, y + i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x + m, y - i) && welt.getFeld(x + m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y - i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + m, y - i) && welt.getFeld(x + m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y - i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + m, y - i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - m, y + i) && welt.getFeld(x - m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y + i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - m, y + i) && welt.getFeld(x - m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y + i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - m, y + i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - m, y - i) && welt.getFeld(x - m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y - i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - m, y - i) && welt.getFeld(x - m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y - i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - m, y - i, besuchtSetzen);
                     }
                 }
                 for (int i = 1; i <= m; i++) {
-                    if (welt.isInMap(x + i, y + m) && welt.getFeld(x + i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y + m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + i, y + m) && welt.getFeld(x + i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y + m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + i, y + m, besuchtSetzen);
                     }
-                    if (welt.isInMap(x + i, y - m) && welt.getFeld(x + i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y - m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + i, y - m) && welt.getFeld(x + i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y - m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + m, y - i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - i, y + m) && welt.getFeld(x - i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y + m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - i, y + m) && welt.getFeld(x - i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y + m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - m, y + i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - i, y - m) && welt.getFeld(x - i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y - m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - i, y - m) && welt.getFeld(x - i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y - m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - i, y - m, besuchtSetzen);
                     }
                 }
@@ -670,25 +716,25 @@ public class Berechnung {
         for (int m = 1; m < Math.max(welt.getMapSize()[0], welt.getMapSize()[1]); m++) {
 
             if (eingekesselt) {
-                if (welt.isInMap(welt.getFeldInBlickrichtung(besuchtSetzen)) && !welt.getFeldInBlickrichtung(besuchtSetzen).isBesucht() && welt.getFeldInBlickrichtung(besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(welt.getFeldInBlickrichtung(besuchtSetzen), maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(welt.getFeldInBlickrichtung(besuchtSetzen)) && !welt.getFeldInBlickrichtung(besuchtSetzen).isBesucht() && welt.getFeldInBlickrichtung(besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(welt.getFeldInBlickrichtung(besuchtSetzen), maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug)
                         System.out.println("suche Unbekanntes eingekesselt = Feld in Blickrichtung: " + welt.getFeldInBlickrichtung(besuchtSetzen));
                     return welt.getFeldInBlickrichtung(besuchtSetzen);
                 }
                 // 4 direkt erreichbare Felder prüfen
-                if (welt.isInMap(x + m, y) && !welt.getFeld(x + m, y, besuchtSetzen).isBesucht() && welt.getFeld(x + m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x + m, y) && !welt.getFeld(x + m, y, besuchtSetzen).isBesucht() && welt.getFeld(x + m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche Unbekanntes eingekessel: " + (x + m) + "," + y);
                     return welt.getFeld(x + m, y, besuchtSetzen);
                 }
-                if (welt.isInMap(x - m, y) && !welt.getFeld(x - m, y, besuchtSetzen).isBesucht() && welt.getFeld(x - m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x - m, y) && !welt.getFeld(x - m, y, besuchtSetzen).isBesucht() && welt.getFeld(x - m, y, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche Unbekanntes eingekessel: " + (x - m) + "," + y);
                     return welt.getFeld(x - m, y, besuchtSetzen);
                 }
-                if (welt.isInMap(x, y + m) && !welt.getFeld(x, y + m, besuchtSetzen).isBesucht() && welt.getFeld(x, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y + m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x, y + m) && !welt.getFeld(x, y + m, besuchtSetzen).isBesucht() && welt.getFeld(x, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y + m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche Unbekanntes eingekessel: " + x + "," + (y + m));
                     return welt.getFeld(x, y + m, besuchtSetzen);
                 }
-                if (welt.isInMap(x, y - m) && !welt.getFeld(x, y - m, besuchtSetzen).isBesucht() && welt.getFeld(x, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y - m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                if (welt.isInMap(x, y - m) && !welt.getFeld(x, y - m, besuchtSetzen).isBesucht() && welt.getFeld(x, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x, y - m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                     if (debug) System.out.println("suche Unbekanntes eingekessel: " + x + m + "," + (y - m));
                     return welt.getFeld(x, y - m, besuchtSetzen);
                 }
@@ -696,32 +742,32 @@ public class Berechnung {
                 //if (debug) System.out.println("suche unbekanntes eingekesselt 1. Schleife");
                 //weitere Felder prüfen
                 for (int i = 1; i <= m; i++) {
-                    if (welt.isInMap(x + m, y + i) && !welt.getFeld(x + m, y + i, besuchtSetzen).isBesucht() && welt.getFeld(x + m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y + i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + m, y + i) && !welt.getFeld(x + m, y + i, besuchtSetzen).isBesucht() && welt.getFeld(x + m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y + i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + m, y + i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x + m, y - i) && !welt.getFeld(x + m, y - i, besuchtSetzen).isBesucht() && welt.getFeld(x + m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y - i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + m, y - i) && !welt.getFeld(x + m, y - i, besuchtSetzen).isBesucht() && welt.getFeld(x + m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + m, y - i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + m, y - i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - m, y + i) && !welt.getFeld(x - m, y + i, besuchtSetzen).isBesucht() && welt.getFeld(x - m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y + i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - m, y + i) && !welt.getFeld(x - m, y + i, besuchtSetzen).isBesucht() && welt.getFeld(x - m, y + i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y + i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - m, y + i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - m, y - i) && !welt.getFeld(x - m, y - i, besuchtSetzen).isBesucht() && welt.getFeld(x - m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y - i, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - m, y - i) && !welt.getFeld(x - m, y - i, besuchtSetzen).isBesucht() && welt.getFeld(x - m, y - i, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - m, y - i, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - m, y - i, besuchtSetzen);
                     }
                 }
                 //if (debug) System.out.println("suche unbekanntes eingekesselt 2. Schleife");
 
                 for (int i = 1; i <= m; i++) {
-                    if (welt.isInMap(x + i, y + m) && !welt.getFeld(x + i, y + m, besuchtSetzen).isBesucht() && welt.getFeld(x + i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y + m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + i, y + m) && !welt.getFeld(x + i, y + m, besuchtSetzen).isBesucht() && welt.getFeld(x + i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y + m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + i, y + m, besuchtSetzen);
                     }
-                    if (welt.isInMap(x + i, y - m) && !welt.getFeld(x + i, y - m, besuchtSetzen).isBesucht() && welt.getFeld(x + i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y - m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x + i, y - m) && !welt.getFeld(x + i, y - m, besuchtSetzen).isBesucht() && welt.getFeld(x + i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x + i, y - m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x + m, y - i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - i, y + m) && !welt.getFeld(x - i, y + m, besuchtSetzen).isBesucht() && welt.getFeld(x - i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y + m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - i, y + m) && !welt.getFeld(x - i, y + m, besuchtSetzen).isBesucht() && welt.getFeld(x - i, y + m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y + m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - m, y + i, besuchtSetzen);
                     }
-                    if (welt.isInMap(x - i, y - m) && !welt.getFeld(x - i, y - m, besuchtSetzen).isBesucht() && welt.getFeld(x - i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y - m, maxRisiko, besuchtSetzen,anzahlEinkesselndeFelder)) {
+                    if (welt.isInMap(x - i, y - m) && !welt.getFeld(x - i, y - m, besuchtSetzen).isBesucht() && welt.getFeld(x - i, y - m, besuchtSetzen).getRisiko() < maxRisiko && !welt.isEingekesselt(x - i, y - m, maxRisiko, besuchtSetzen, anzahlEinkesselndeFelder)) {
                         return welt.getFeld(x - i, y - m, besuchtSetzen);
                     }
                 }

@@ -31,6 +31,7 @@ public class Welt {
     private boolean umrandet = false;
     private Hashtable<Integer, Integer> stenchRadarBefore;
     private Hashtable<Integer, Integer> stenchRadarAfter;
+    private LinkedList<Knoten> letzteBesuchteFelder;
 
 
 
@@ -58,6 +59,8 @@ public class Welt {
         hunterPos[0] = 1;
         hunterPos[1] = 1;
         blickrichtung = Himmelsrichtung.EAST;
+
+        letzteBesuchteFelder = new LinkedList<>();
     }
 
 
@@ -352,25 +355,6 @@ public class Welt {
         return anzahl;
     }
 
-    /*public boolean isInBlickrichtung(Feld f){
-        switch (blickrichtung) {
-            case EAST:
-                if (getFeld(hunterPos[0] + 1, hunterPos[1]) == f) return true;
-                return false;
-            case SOUTH:
-                if (getFeld(hunterPos[0], hunterPos[1] + 1) == f) return true;
-                return false;
-            case WEST:
-                if (getFeld(hunterPos[0] - 1, hunterPos[1]) == f) return true;
-                return false;
-            case NORTH:
-                if (getFeld(hunterPos[0], hunterPos[1] - 1) == f) return true;
-                return false;
-            default:
-                return false;
-        }
-    }*/
-
     public Feld getFeldInBlickrichtung(boolean besuchtSetzen){
         switch (blickrichtung) {
             case EAST:
@@ -393,6 +377,32 @@ public class Welt {
     public int getPunkte() {
         return punkte;
     }
+
+    public boolean isInLetzteBesuchteFelder(Feld gesucht, int maxAnzahlOk){
+        for (Knoten k: letzteBesuchteFelder){
+            if (k.getFeld() == gesucht && k.getAnzahlBesucht() > maxAnzahlOk) {
+                System.out.println("Ist in zuletzt besuchte Felder über maxAnzahl: " + gesucht + "Anzahl: " + k.getAnzahlBesucht());
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void addToLetzteFelder(Feld f){
+        for (Knoten k: letzteBesuchteFelder) {
+            if (k.getFeld() == f) {
+                k.setAnzahlBesucht();
+                System.out.println("Feld zu zuletzt besucht Anzahl erhöht: " + f);
+                return;
+            }
+        }
+        if(letzteBesuchteFelder.size() > 5) letzteBesuchteFelder.removeFirst();
+
+        letzteBesuchteFelder.add(new Knoten(f));
+
+        System.out.println("Feld zu zuletzt besucht hinzugefügt: " + f);
+    }
+
 
     // ---- Aktion Zeugs ----
     public HunterAction getLastAction() {
@@ -427,6 +437,8 @@ public class Welt {
         addZustand(x, y, HUNTER,besuchtSetzen);
         hunterPos[0] = x;
         hunterPos[1] = y;
+
+        this.addToLetzteFelder(getFeldHinterMir());
     }
 
     public int[] getHunterPos() {
@@ -569,7 +581,7 @@ public class Welt {
     public void displayRisiko() {
         for (int i = 0; i < map.length; i++) {//Zeilen
             if (i == 0) {
-                for (int a = 0; a <= map[0].length; a++){
+                for (int a = -1; a < map[0].length; a++){
                     switch (String.valueOf(a).length()){
                         case 1:
                             System.out.print("[-" + a + "-] ");
@@ -588,15 +600,15 @@ public class Welt {
 
             for (int z = 0; z < map[0].length; z++) {//Spalten
                 if (z == 0) {
-                    switch (String.valueOf((i+1)).length()){
+                    switch (String.valueOf((i)).length()){
                         case 1:
-                            System.out.print("[-" + (i+1) + "-] ");
+                            System.out.print("[-" + (i) + "-] ");
                             break;
                         case 2:
-                            System.out.print("[-" + (i+1) + "] ");
+                            System.out.print("[-" + (i) + "] ");
                             break;
                         case 3:
-                            System.out.print("[" + (i+1) + "] ");
+                            System.out.print("[" + (i) + "] ");
                             break;
                     }
                 }

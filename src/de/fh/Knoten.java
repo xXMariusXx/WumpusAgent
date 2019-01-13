@@ -6,6 +6,7 @@ public class Knoten {
     private Knoten vorgaenger;
     private int pfadkosten = 0; //zurückgelegte Strecke bis zu diesem Feld
     private int schaetzwert = 0; //restliche Entfernung zum Ziel + Risiko
+    private int anzahlBesucht = 0;
 
 
     //Konstruktor für Nachfolgeknoten
@@ -55,4 +56,11 @@ public class Knoten {
         return s.hashCode();
     }
 
+    public int getAnzahlBesucht() {
+        return anzahlBesucht;
+    }
+
+    public void setAnzahlBesucht() {
+        this.anzahlBesucht++;
+    }
 }
