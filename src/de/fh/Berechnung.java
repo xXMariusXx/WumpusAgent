@@ -53,7 +53,7 @@ public class Berechnung {
                     modus = "umrande";
                     // }
                     //Wenn Hunter nach einer Runde wieder auf Feld 1,1 kommt: Map umranden
-                    if (zielfeld == welt.getFeld(1, 1, besuchtSetzen) && welt.getFeld(1,1,besuchtSetzen) == welt.getHunterFeld() && modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() > 10) {
+                    if (zielfeld == welt.getFeld(1, 1, besuchtSetzen) && welt.getFeld(1, 1, besuchtSetzen) == welt.getHunterFeld() && modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() > 10) {
                         welt.umrande();
                         //Wenn das umranden der Map nicht geklappt hat
                         if (!welt.isUmrandet() && welt.getHunterFeld().isBesucht()) {
@@ -111,10 +111,6 @@ public class Berechnung {
             if (welt.isEingekesselt(welt.getHunterFeld(), 90, besuchtSetzen, 4))
                 welt.getFeldHinterMir().removeZustand(EVTFALLE);
 
-            if (welt.isInLetzteBesuchteFelder(zielfeld,3)) {
-                zielfeldErreicht = false;
-                zielfeld = welt.getFeld(-1,-1,false);
-            }
         }
 
         // ---------------------- Switch Modus:
@@ -180,14 +176,8 @@ public class Berechnung {
                     if (debug) System.out.println("Standardfall 2: Ziel NICHT erreicht\nZielfeld: " + zielfeld);
                     //wenn das aktuelle Ziel nicht in der Map liegt (z.B. wenn das Ziel schon länger besteht, die Welt aber mittlerweile umrandet ist)
                     //Neues Ziel bestimmen (wie in Standardfall 1)
-                    if (!welt.isInMap(zielfeld) || welt.isInLetzteBesuchteFelder(zielfeld,3)) {
-                        zielfeldErreicht = false;
-                        zielfeld = welt.getFeld(-1, -1, besuchtSetzen);
-                        nextAction = bestimmeZielUndZwischenziel();
-                        if (nextAction == HunterAction.GRAB) //wenn Ziel und Zwischenziel erfolgreich gesetzt wurden
-                        {
-                            nextAction = bestimmeWegZumFeld();
-                        }
+                    if (!welt.isInMap(zielfeld) || welt.isInLetzteBesuchteFelder(zielfeld, 3)) {
+                        setZielfeldErreicht();
                     }
                     //aktuelles Ziel liegt in der Map
                     else {
@@ -196,7 +186,7 @@ public class Berechnung {
                             //Schleife die probiert zu aktuell gesetztem Zielfeld ein zwischenFeld zu finden
                             for (int z = 0; z < 4; z++) {
                                 bestimmeNaechstesZwischenFeld(z);
-                                if (welt.isInMap(zwischenfeld) && !welt.isInLetzteBesuchteFelder(zwischenfeld,3)) {
+                                if (welt.isInMap(zwischenfeld) && !welt.isInLetzteBesuchteFelder(zwischenfeld, 3)) {
                                     if (!modus.equalsIgnoreCase("umrande")) {
                                         if (i < 3) {
                                             if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen, anzahlEinkesselndeFelder)) {
@@ -208,8 +198,7 @@ public class Berechnung {
                                             gefunden = true;
                                             break;
                                         }
-                                    }
-                                    else {
+                                    } else {
                                         gefunden = true;
                                         break;
                                     }
@@ -402,11 +391,17 @@ public class Berechnung {
         //if (debug) System.out.println("<<<<<<<<ENDE>>>>>>>>");
     }
 
+    //BZUZW
     private HunterAction bestimmeZielUndZwischenziel() {
+        //Methode bestimmt sofern möglich ein neues Ziel und ein neues Zwischenziel
+        if(debug) System.out.println("BZUZW:: starte die Suche nach neuem Haupt- und Zwischenziel");
+
+        //Sofern möglich ein neues Hauptziel bestimmen
         aufrufBestimmeNaechstesZielFeld(0);
-        //In dem Fall, dass kein Zielfeld mehr gefunden werden konnte: Spiel verlassen
+
+        //In dem Fall, dass kein neues HauptZielfeld mehr gefunden werden konnte: Spiel verlassen
         if (!welt.isInMap(zielfeld)) {
-            if (debug) System.out.println("1. QuitGame da kein Ziel gefunden");
+            if (debug) System.out.println("BZUZW:: 1. QuitGame da kein neues HauptZiel gefunden werden konnte");
             return HunterAction.QUIT_GAME;
         }
 
@@ -415,12 +410,20 @@ public class Berechnung {
         //!
 
 
+        aufrufBestimmeNaechstesZwischenFeld(0);
+
+        //Wenn das Zwischenfeld nicht erreicht werden konnte: versuchen andere Hauptziele zu bestimmmen, welche dann erreichbar sind!
+        if (!welt.isInMap(zwischenfeld)){
+
+        }
+
+
         boolean gefunden = false;
         for (int i = 1; i <= zielFaelle && !welt.isInMap(zwischenfeld); i++) {
             //Schleife die probiert zu aktuell gesetztem Zielfeld ein zwischenFeld zu finden
             for (int z = 0; z < 4; z++) {
                 bestimmeNaechstesZwischenFeld(z);
-                if (welt.isInMap(zwischenfeld) && !welt.isInLetzteBesuchteFelder(zwischenfeld,3)) {
+                if (welt.isInMap(zwischenfeld) && !welt.isInLetzteBesuchteFelder(zwischenfeld, 3)) {
                     if (z < 3) {
                         if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen, anzahlEinkesselndeFelder)) {
                             gefunden = true;
@@ -451,7 +454,11 @@ public class Berechnung {
         //!
         return HunterAction.GRAB; //Grab, um was zu haben auf das man prüfen kann ob erfolgreich
     }
+    private void aufrufBestimmeNaechstesZwischenFeld(int start){
 
+    }
+
+    //BNZWF
     private Feld bestimmeNaechstesZwischenFeld(int punkt) {
         //bestimmt mit Hilfe von A* das nächste Zwischenfeld zum aktuellen Zielfeld
 
@@ -486,20 +493,35 @@ public class Berechnung {
         if (debug) System.out.println("neu bestimmtes Zwischenziel durch Case" + punkt + ": " + zwischenfeld);
         return zwischenfeld;
     }
+    //--------------------------------------------------------------------------------------------------------------------
 
+
+    //--------------------------------------------------------------------------------------------------------------------
+    //BNZFA
     private void aufrufBestimmeNaechstesZielFeld(int start) {
-        //BestimmteNaechstesZielfeld der Reihe nach abklappern bis Zielfeld gefunden oder keine Möglichkeit mehr
+        //Versucht ein neues Hauptziel zu bestimmen.
+        //Zusätzliche Bedingungen zu den jeweiligen Einzelbedingungen:
+        //1. das Feld muss innerhalb der Map liegen
+        //2. das Feld darf nicht in der Liste der zuletzt besuchten Felder vorkommen
+        //wenn kein neues Hauptziel bestimmt werden kann, wird das Hauptziel auf -1,-1 gesetzt
+
+
+        if (debug) System.out.println("BNZFA:: starte Suche nach neuem Hauptziel");
         int i;
-        for (i = start; i <= zielFaelle && (!welt.isInMap(zielfeld) || welt.isInLetzteBesuchteFelder(zielfeld,3)); i++) {
+        for (i = start; i <= zielFaelle; i++) {
             bestimmeNaechstesZielFeld(i);
+            //Schleife hört auf wenn alle Testfälle durch gelaufen sind, oder ein Feld innerhalb der Map gefunden wurde, oder
+            if (welt.isInMap(zielfeld) && !welt.isInLetzteBesuchteFelder(zielfeld, 3)) break;
         }
-        if (debug) System.out.println("BNZFA hat Ziel in Case gefunden: " + (i - 1));
-        zwischenfeldErreicht = true;
-        zwischenfeld = welt.getFeld(-1,-1,false);
+
+        if (debug && !welt.isInMap(zielfeld))
+            System.out.println("BNZFA:: es konnte kein neues Hauptziel bestimmt werden! " + zielfeld);
+        else if (debug) System.out.println("BNZFA:: neues Hauptziel gefunden: " + zielfeld);
     }
 
-    private void bestimmeNaechstesZielFeld(int punkt) {
-        if (debug) System.out.println("BNZF Case: " + punkt);
+    //BNZF
+    private void bestimmeNaechstesZielFeld(int punkt) { //BNZF
+        if (debug) System.out.println("BNZF:: Case " + punkt);
         Feld f = welt.getFeld(-1, -1, besuchtSetzen);
         switch (punkt) {
             case 0:
@@ -523,71 +545,7 @@ public class Berechnung {
         }
 
         zielfeld = f;
-        zielfeldErreicht = false;
-        if (debug) System.out.println("neu bestimmtes Zielfeld: " + zielfeld);
-    }
-
-    private HunterAction bestimmeWegZumFeld() {
-        //bestimmt nextAction um von aktueller Position zum nächsten Zwischenfeld zu gelangen
-
-        if (debug) System.out.println("Bestimme Weg von " + welt.getHunterFeld() + " nach " + zwischenfeld);
-        int[] feldPos = zwischenfeld.getPosition();
-
-        if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] + 1 == feldPos[1]) {
-            switch (welt.getBlickrichtung()) {
-                case EAST:
-                    return HunterAction.TURN_RIGHT;
-                case WEST:
-                    return HunterAction.TURN_LEFT;
-                case NORTH:
-                    return HunterAction.TURN_RIGHT;
-                case SOUTH:
-                    setZwischenfeldErreicht();
-                    ;
-                    return HunterAction.GO_FORWARD;
-            }
-        } else if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] - 1 == feldPos[1]) {
-            switch (welt.getBlickrichtung()) {
-                case EAST:
-                    return HunterAction.TURN_LEFT;
-                case WEST:
-                    return HunterAction.TURN_RIGHT;
-                case NORTH:
-                    setZwischenfeldErreicht();
-                    return HunterAction.GO_FORWARD;
-                case SOUTH:
-                    return HunterAction.TURN_RIGHT;
-            }
-        } else if (welt.getHunterPos()[0] + 1 == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
-            switch (welt.getBlickrichtung()) {
-                case EAST:
-                    setZwischenfeldErreicht();
-                    return HunterAction.GO_FORWARD;
-
-                case WEST:
-                    return HunterAction.TURN_RIGHT;
-                case NORTH:
-                    return HunterAction.TURN_RIGHT;
-                case SOUTH:
-                    return HunterAction.TURN_LEFT;
-            }
-        } else if (welt.getHunterPos()[0] - 1 == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
-            switch (welt.getBlickrichtung()) {
-                case EAST:
-                    return HunterAction.TURN_LEFT;
-                case WEST:
-                    setZwischenfeldErreicht();
-                    return HunterAction.GO_FORWARD;
-                case NORTH:
-                    return HunterAction.TURN_LEFT;
-                case SOUTH:
-                    return HunterAction.TURN_RIGHT;
-            }
-        }
-
-        //Hier ist return NULL (Programmabsturz) ok, da dies bedeuten würde dass es eine fehlerhafte Bestimmung des Zwischenfeldes gab
-        System.err.println("Fehler bei Wegbestimmung, Zwischenziel liegt nicht in der Nähe des Hunters");
-        return null;
+        if (zielfeld.getPosition()[0] != -1) setZielfeldNichtErreicht();
     }
 
     private Feld sucheNaechstesMitRisiko(int x, int y, int maxRisiko, boolean eingekesselt) {
@@ -833,6 +791,74 @@ public class Berechnung {
             System.out.println("Kein unbekanntes Feld mehr vorhanden oder Risiko zu groß! Risiko: " + maxRisiko);
         return new Feld(Feld.Zustand.UNBEKANNT, -1, -1, besuchtSetzen);
     }
+    //--------------------------------------------------------------------------------------------------------------------
+
+
+
+    private HunterAction bestimmeWegZumFeld() {
+        //bestimmt nextAction um von aktueller Position zum nächsten Zwischenfeld zu gelangen
+
+        if (debug) System.out.println("Bestimme Weg von " + welt.getHunterFeld() + " nach " + zwischenfeld);
+        int[] feldPos = zwischenfeld.getPosition();
+
+        if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] + 1 == feldPos[1]) {
+            switch (welt.getBlickrichtung()) {
+                case EAST:
+                    return HunterAction.TURN_RIGHT;
+                case WEST:
+                    return HunterAction.TURN_LEFT;
+                case NORTH:
+                    return HunterAction.TURN_RIGHT;
+                case SOUTH:
+                    setZwischenfeldErreicht();
+                    ;
+                    return HunterAction.GO_FORWARD;
+            }
+        } else if (welt.getHunterPos()[0] == feldPos[0] && welt.getHunterPos()[1] - 1 == feldPos[1]) {
+            switch (welt.getBlickrichtung()) {
+                case EAST:
+                    return HunterAction.TURN_LEFT;
+                case WEST:
+                    return HunterAction.TURN_RIGHT;
+                case NORTH:
+                    setZwischenfeldErreicht();
+                    return HunterAction.GO_FORWARD;
+                case SOUTH:
+                    return HunterAction.TURN_RIGHT;
+            }
+        } else if (welt.getHunterPos()[0] + 1 == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
+            switch (welt.getBlickrichtung()) {
+                case EAST:
+                    setZwischenfeldErreicht();
+                    return HunterAction.GO_FORWARD;
+
+                case WEST:
+                    return HunterAction.TURN_RIGHT;
+                case NORTH:
+                    return HunterAction.TURN_RIGHT;
+                case SOUTH:
+                    return HunterAction.TURN_LEFT;
+            }
+        } else if (welt.getHunterPos()[0] - 1 == feldPos[0] && welt.getHunterPos()[1] == feldPos[1]) {
+            switch (welt.getBlickrichtung()) {
+                case EAST:
+                    return HunterAction.TURN_LEFT;
+                case WEST:
+                    setZwischenfeldErreicht();
+                    return HunterAction.GO_FORWARD;
+                case NORTH:
+                    return HunterAction.TURN_LEFT;
+                case SOUTH:
+                    return HunterAction.TURN_RIGHT;
+            }
+        }
+
+        //Hier ist return NULL (Programmabsturz) ok, da dies bedeuten würde dass es eine fehlerhafte Bestimmung des Zwischenfeldes gab
+        System.err.println("Fehler bei Wegbestimmung, Zwischenziel liegt nicht in der Nähe des Hunters");
+        return null;
+    }
+
+
 
     private HunterAction wumpusToeten() {
         //bereits bekannt: ich bin an mindestens 2 Stellen von Gestank oder ähnlichem umkesselt und der Wumpus lebt noch
@@ -870,9 +896,15 @@ public class Berechnung {
         //Wenn BumpedIntoWall, Ziel auf erreicht setzen, da es keinen Sinn macht weiter die Wand versuchen zu erreichen
         zielfeldErreicht = true;
         zielfeld = welt.getFeld(-1, -1, besuchtSetzen);
+        setZwischenfeldErreicht();
     }
 
-    public void setZwischenfeldErreicht() {
+    public void setZielfeldNichtErreicht() {
+        zielfeldErreicht = false;
+        setZwischenfeldErreicht();
+    }
+
+    public void setZwischenfeldErreicht() ss {
         zwischenfeldErreicht = true;
         zwischenfeld = welt.getFeld(-1, -1, besuchtSetzen);
     }

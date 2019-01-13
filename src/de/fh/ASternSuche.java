@@ -18,8 +18,8 @@ public class ASternSuche {
         this.start = start;
         this.ziel = ziel;
         this.welt = welt;
-        if (true) System.out.println("A*Startfeld:    " + start);
-        if (true) System.out.println("A*Zielfeld:     " + ziel);
+        if (debug) System.out.println("A*Startfeld:    " + start);
+        if (debug) System.out.println("A*Zielfeld:     " + ziel);
 
     }
 
