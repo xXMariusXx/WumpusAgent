@@ -220,6 +220,12 @@ public class Berechnung {
 
                     }
                 }
+
+                //SONST
+                //z.B. zielfeldErreicht && Gold aufgesammelt, aber da im Modus "umrande", noch kein neues Zielfeld bekannt
+                else{
+                    bestimmeZielUndZwischenziel();
+                }
             }
         }
 
@@ -269,6 +275,7 @@ public class Berechnung {
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
                     if (debug) System.out.println("Case1 oben");
+                    umrandeModus = 3;
                 }
 
                 break;
@@ -294,7 +301,7 @@ public class Berechnung {
                 //4.. nach links gehen
                 else if (!((f = welt.getFeld(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
-                    umrandeModus = 4;
+                    //umrandeModus = 4;
                 }
 
                 break;

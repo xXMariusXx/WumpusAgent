@@ -567,8 +567,40 @@ public class Welt {
     // ---- Debug Zeugs ----
 
     public void displayRisiko() {
-        for (int i = 0; i < map.length; i++) {
-            for (int z = 0; z < map[0].length; z++) {
+        for (int i = 0; i < map.length; i++) {//Zeilen
+            if (i == 0) {
+                for (int a = 0; a <= map[0].length; a++){
+                    switch (String.valueOf(a).length()){
+                        case 1:
+                            System.out.print("[-" + a + "-] ");
+                            break;
+                        case 2:
+                            System.out.print("[-" + a + "] ");
+                            break;
+                        case 3:
+                            System.out.print("[" + a + "] ");
+                            break;
+                    }
+                }
+                System.out.println();
+
+            }
+
+            for (int z = 0; z < map[0].length; z++) {//Spalten
+                if (z == 0) {
+                    switch (String.valueOf((i+1)).length()){
+                        case 1:
+                            System.out.print("[-" + (i+1) + "-] ");
+                            break;
+                        case 2:
+                            System.out.print("[-" + (i+1) + "] ");
+                            break;
+                        case 3:
+                            System.out.print("[" + (i+1) + "] ");
+                            break;
+                    }
+                }
+
                 int risiko = map[i][z].getRisiko();
                 switch (Integer.toString(risiko).length()) {
                     case 1:
