@@ -3,32 +3,41 @@ package de.fh;
 import de.fh.wumpus.enums.HunterAction;
 
 import static de.fh.Feld.Zustand.*;
-//ToDo verhindern dass der Hunter die komplette rechte Seite einzeln abklappert
+//TODO verstecken in einer Ecke verhindern
+//TODO Vom Wumpus getötet werden wenn beide gleichzeitig aufs gleiche Feld gehen
+//TODO Fallen genauer bestimmen (modus Falltesten)
 
 public class Berechnung {
+    private boolean debug = true;
+
     private Welt welt;
     private String modus;
+
     private Feld zielfeld;
-    private boolean zielfeldErreicht = true; //muss auf False gesetzt werden, wenn ein neues Ziel bestimmt wurde
+    private boolean zielfeldErreicht; //muss auf False gesetzt werden, wenn ein neues Ziel bestimmt wurde
     private Feld zwischenfeld;
-    private boolean zwischenfeldErreicht = true; //muss auf False gesetzt werden, wenn ein neues Zwischen-Ziel bestimmt wurde
-    private boolean debug = true;
-    private int umrandeModus = 1;
+    private boolean zwischenfeldErreicht; //muss auf False gesetzt werden, wenn ein neues Zwischen-Ziel bestimmt wurde
+
     private boolean besuchtSetzen;
 
+    //Config:
     private final int anzahlEinkesselndeFelder = 2;
     private final int zielFaelle = 5;
     private final int zwischenzielFaelle = 3;
 
+    private int umrandeModus = 1;
+
     public Berechnung(Welt welt) {
         this.welt = welt;
-        zielfeld = new Feld(Feld.Zustand.UNBEKANNT, -99, -99, true);
-        zwischenfeld = new Feld(Feld.Zustand.UNBEKANNT, -88, -88, true);
+        setZielfeldErreicht();
+        setZielfeldErreicht();
         modus = "umrande";
         besuchtSetzen = false;
     }
 
+    //--------------------------------------------------------------------------------------------------------------------
     //Hauptmethode die aufgerufen wird
+    //--------------------------------------------------------------------------------------------------------------------
     public void berechne() {
         HunterAction nextAction = HunterAction.SIT;
 
@@ -39,7 +48,10 @@ public class Berechnung {
 
         // ---------------------- Abfragen vor Berechnungsbeginn:
         {
-            if (modus != "goldAufnehmen") {
+            if (modus.equalsIgnoreCase("goldAufnehmen")) {
+                modus = "goldAufnehmen";
+            } else {
+
                 if (welt.isUmrandet()) {
                     besuchtSetzen = true;
                     if (welt.isGoldAufgesammelt()) {
@@ -49,45 +61,35 @@ public class Berechnung {
                         modus = "standard";
                     }
                     if (welt.getPunkte() == 0) modus = "aufgeben";
-                } else {
-                    //if (zielfeldErreicht) {
+
+                } else { //Welt ist nicht umrandet
                     modus = "umrande";
-                    // }
+
                     //Wenn Hunter nach einer Runde wieder auf Feld 1,1 kommt: Map umranden
-                    if (zielfeld == welt.getFeld(1, 1, besuchtSetzen) && welt.getFeld(1, 1, besuchtSetzen) == welt.getHunterFeld() && modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() > 10) {
+                    //Wenn er erst 10 Felder besucht hat, ist er wahrscheinlich zufällig auf 1,1 gekommen und sollte weiter die Map umranden
+                    if (zielfeld == welt.getFeld(1, 1, besuchtSetzen) && welt.getFeld(1, 1, besuchtSetzen) == welt.getHunterFeld() && welt.anzahlBesuchterFelder() > 10) {
                         welt.umrande();
-                        //Wenn das umranden der Map nicht geklappt hat
-                        if (!welt.isUmrandet() && welt.getHunterFeld().isBesucht()) {
-                            modus = "aufgeben";
-                        } else modus = "standard";
+                        //Wenn das umranden der Map nicht geklappt hat, aufgeben
+                        if (!welt.isUmrandet() && welt.getHunterFeld().isBesucht()) modus = "aufgeben";
+                            //Wenn das umranden geklappt hat: standard Modus
+                        else modus = "standard";
                     }
                 }
-                //Wenn jedes Feld besucht ist, und er gerade nicht auf dem Weg zurück zum Start ist: aufgeben
-                if (!modus.equalsIgnoreCase("goldAufgenommenUndWumpusTot") && welt.anzahlBesuchterFelder() == welt.anzahlFelder())
+
+                //Wenn jedes Feld besucht ist und das aktuelle Ziel nicht der Start ist: aufgeben
+                if (zielfeld != welt.getFeld(1, 1, besuchtSetzen) && welt.anzahlBesuchterFelder() == welt.anzahlFelder())
                     modus = "aufgeben";
             }
 
-            //Attribute/Zustände wieder richtig setzen
-            {
-                //Wenn Hunter sich am Ziel befindet: boolean Zielerreicht auf true setzen
-                if (welt.getHunterFeld() == zielfeld) {
-                    if (debug) System.out.println("Hunter befindet sich auf aktuellem Zielfeld!");
-                    setZielfeldErreicht();
-                }
 
-                //Wenn Hunter eingekesselt, Attribute auf True damit neue Ziele bestimmt werden
-                if (welt.isEingekesselt(welt.getHunterFeld(), 69, besuchtSetzen, anzahlEinkesselndeFelder)) {
-                    setZielfeldErreicht();
-                    setZwischenfeldErreicht();
-                }
-
-                if (zielfeldErreicht) zielfeld = welt.getFeld(-1, -1, besuchtSetzen);
-                if (zwischenfeldErreicht) zwischenfeld = welt.getFeld(-1, -1, besuchtSetzen);
+            //Wenn Hunter sich am Ziel befindet oder eingekesselt ist
+            if (welt.getHunterFeld() == zielfeld || welt.isEingekesselt(welt.getHunterFeld(), 45, besuchtSetzen, anzahlEinkesselndeFelder)) {
+                if (debug) System.out.println("Hunter befindet sich auf aktuellem Zielfeld!");
+                setZielfeldErreicht();
             }
 
 
-            //Wenn der Hunter von Gestank eingekesselt ist und Wumpus lebendig ist, soll versucht werden
-            //den Wumpus zu töten
+            //Wenn der Hunter von Gestank eingekesselt ist und Wumpus lebendig ist, soll versucht werden den Wumpus zu töten
             if (welt.isWumpusLebendig() && welt.isVonGestankEingekesselt(besuchtSetzen) && welt.getAnzahlPfeile() > 0) {
                 if (debug)
                     System.out.println("Berechnung setzt Modus auf Wumpus töten, da von Gestank umrandet und Wumpus lebendig!");
@@ -99,6 +101,8 @@ public class Berechnung {
             else besuchtSetzen = true;
             if (debug) System.out.println("besucht setzen: " + besuchtSetzen);
 
+
+            //Wenn er im Umrande Modus 15 Felder gelaufen ist, die Felder um 1,1 wieder auf unbesucht setzen, damit 1,1 auf jeden Fall erreicht werden kann
             if (modus.equalsIgnoreCase("umrande") && welt.anzahlBesuchterFelder() == 15) {
                 welt.getFeld(1, 1, besuchtSetzen).setNichtBesucht();
                 welt.getFeld(2, 1, besuchtSetzen).setNichtBesucht();
@@ -108,10 +112,11 @@ public class Berechnung {
                 welt.getFeld(3, 2, besuchtSetzen).setNichtBesucht();
             }
 
-            //Wenn das aktuelle Feld von EVTFALLE eingekesselt wurde, da besuchtSetzen auf false war, da Modus auf WumpusTöten war: Feld hinter mir löschen
+            //Wenn das aktuelle Feld von EVTFALLE eingekesselt wurde weil besuchtSetzen auf false war, (da Modus auf WumpusTöten war) : Feld hinter mir wieder löschen
             if (welt.isEingekesselt(welt.getHunterFeld(), 90, besuchtSetzen, 4))
                 welt.getFeldHinterMir().removeZustand(EVTFALLE);
 
+            if (!welt.isWumpusLebendig() && welt.isGoldAufgesammelt() && welt.getHunterFeld() == welt.getFeld(1,1,besuchtSetzen)) modus = "goldAufgenommenUndWumpusTotUndStart";
         }
 
         // ---------------------- Switch Modus:
@@ -134,7 +139,12 @@ public class Berechnung {
                 case "goldAufgenommenUndWumpusTot":
                     //Hunter soll zum Start laufen, wenn er das Gold aufgenommen hat
                     zielfeld = welt.getFeld(1, 1, besuchtSetzen);
-                    if (welt.getHunterFeld() != zielfeld) zielfeldErreicht = false;
+                    if (welt.getHunterFeld() != zielfeld) setZielfeldNichtErreicht();
+                    break;
+
+                case "goldAufgenommenUndWumpusTotUndStart":
+                    welt.addPunkte(100);
+                    nextAction = HunterAction.QUIT_GAME;
                     break;
 
                 case "wumpusToeten":
@@ -151,41 +161,9 @@ public class Berechnung {
         // ---------------------- Standardfälle:
         {
             //Wenn nextAction im Switch noch nicht überschrieben wurde
-            while (nextAction == HunterAction.SIT) {
-                //STANDARDFALL
-                //noch kein Gold aufgesammelt
-                if (!welt.isGoldAufgesammelt()) {
-                    if (debug) System.out.println("Standardfall:");
-                    nextAction = bestimmeZielUndZwischenziel();
-                }
-
-                //SONDERFALL GOLD 2
-                else if (zielfeldErreicht && welt.isGoldAufgesammelt() && !modus.equalsIgnoreCase("umrande") && welt.getHunterFeld() != welt.getFeld(1, 1, false)) {
-                    if (debug) System.out.println("Sonderfall Gold 2");
-                    nextAction = wumpusToeten();
-                    modus = "wumpusToeten";
-
-                }
-
-                //SONDERFALL GOLD 1
-                //wenn das aktuelle Ziel erreicht und das Gold bereits aufgesammelt wurde: Spiel beenden
-                else if (welt.getHunterFeld() == welt.getFeld(1, 1, besuchtSetzen) && welt.isGoldAufgesammelt()) {
-                    if (debug) System.out.println("Sonderfall Gold 1");
-                    welt.addPunkte(100);
-                    nextAction = HunterAction.QUIT_GAME;
-                }
-
-
-                //SONST
-                //Falls etwas passiert dass nicht geplant war: neues Zielfeld suchen
-                else {
-                    if (welt.isUmrandet()) {
-                        setZielfeldErreicht();
-                    } else {
-                        umrande(69);
-                    }
-
-                }
+            if (nextAction == HunterAction.SIT) {
+                if (debug) System.out.println("Standardfall:");
+                nextAction = bestimmeZielUndZwischenziel();
             }
 
         }
@@ -198,7 +176,10 @@ public class Berechnung {
         }
 
     }
+    //--------------------------------------------------------------------------------------------------------------------
 
+
+    //--------------------------------------------------------------------------------------------------------------------
     //Hilfsmethoden der Klasse
     //--------------------------------------------------------------------------------------------------------------------
     private void umrande(int maxRisiko) {
@@ -248,7 +229,7 @@ public class Berechnung {
                 if (!((f = welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, besuchtSetzen)).isBesucht()) && f.getRisiko() < maxRisiko) {
                     setZielfeld(f);
                     if (debug) System.out.println("Case2 unten");
-                    if (welt.wandGrenzeY() <= welt.getHunterPos()[0]) umrandeModus = 1;
+                     umrandeModus = 1;
                 }
 
                 //2. nach rechts gehen
@@ -837,7 +818,7 @@ public class Berechnung {
         Feld feldInBlickrichtung = welt.getFeldInBlickrichtung(besuchtSetzen);
 
         if (debug) System.out.println("Feld in Blickrichtung: " + feldInBlickrichtung);
-        if ((feldInBlickrichtung.getZustaende().contains(GESTANK1) || feldInBlickrichtung.getZustaende().contains(GESTANK2) || feldInBlickrichtung.getZustaende().contains(EVTWUMPUS)) && !feldInBlickrichtung.isBeschossen()) {
+        if ((feldInBlickrichtung.getZustaende().contains(GESTANK1) || feldInBlickrichtung.getZustaende().contains(GESTANK2)) && !feldInBlickrichtung.isBeschossen()) {
             if (debug) System.out.println("Schießen in Blickrichtung");
             return HunterAction.SHOOT;
         }
