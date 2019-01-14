@@ -385,12 +385,24 @@ public class Welt {
     }
 
     public boolean isVonWindUmgeben(Feld f){
+        int anzahlWaende = 0;
+        int anzahlWind = 0;
+
         //Wenn ein Feld an allen Seiten von Wind oder Wand umgeben ist: Feld auf "Falle" setzen
-        if ((getFeldRechts(f).getZustaende().contains(WIND) || getFeldRechts(f).getZustaende().contains(WALL)) &&
-                (getFeldUnten(f).getZustaende().contains(WIND)|| getFeldUnten(f).getZustaende().contains(WALL)) &&
-                (getFeldLinks(f).getZustaende().contains(WIND) || getFeldLinks(f).getZustaende().contains(WALL)) &&
-                (getFeldOben(f).getZustaende().contains(WIND)) || getFeldOben(f).getZustaende().contains(WALL))
-        {
+
+        if (getFeldRechts(f).getZustaende().contains(WIND)) anzahlWind++;
+        else if(getFeldRechts(f).getZustaende().contains(WALL)) anzahlWaende++;
+
+        if(getFeldUnten(f).getZustaende().contains(WIND)) anzahlWind++;
+        else if(getFeldUnten(f).getZustaende().contains(WALL)) anzahlWaende++;
+
+        if(getFeldLinks(f).getZustaende().contains(WIND)) anzahlWind++;
+        else if(getFeldLinks(f).getZustaende().contains(WALL)) anzahlWaende++;
+
+        if(getFeldOben(f).getZustaende().contains(WIND)) anzahlWind++;
+        else if(getFeldOben(f).getZustaende().contains(WALL)) anzahlWaende++;
+
+        if ((anzahlWaende + anzahlWind) == 4 && anzahlWaende < 3){
             //Falle sicher setzen
             addZustand(f.getPosition()[0],f.getPosition()[1],FALLE,true);
 

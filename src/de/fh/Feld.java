@@ -28,7 +28,7 @@ public class Feld {
         GESTANK3(26),
         EVTWUMPUS(66),
 
-        WIND(31),
+        WIND(49),
         EVTFALLE(91),
         EVTFALLE2(47),
         FALLE(98);

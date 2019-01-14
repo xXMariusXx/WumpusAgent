@@ -29,7 +29,7 @@ public class Berechnung {
     private final int anzahlEinkesselndeFelder = 2;
     private final int zielFaelle = 5;
     private final int zwischenzielFaelle = 3;
-    private final int maxAnzahlBesucht = 3;
+    private final int maxAnzahlBesucht = 4;
 
     private int umrandeModus = 1;
 
@@ -46,8 +46,8 @@ public class Berechnung {
     //--------------------------------------------------------------------------------------------------------------------
     public void berechne() {
         HunterAction nextAction = HunterAction.SIT;
-        nichtErreichbareZielFelder = new HashSet<Feld>();
-        nichtErreichbareZwischenFelder = new HashSet<Feld>();
+        nichtErreichbareZielFelder = new HashSet<>();
+        nichtErreichbareZwischenFelder = new HashSet<>();
 
         // ---------------------- Start Ausgabe:
         {
@@ -660,29 +660,29 @@ public class Berechnung {
                 }
             } else {
                 if (welt.isInMap((f = welt.getFeldInBlickrichtung(besuchtSetzen))) && !f.isBesucht() && f.getRisiko() < maxRisiko) {
-                    //if (debug)
-                    //    System.out.println("suche Unbekanntes = Feld in Blickrichtung: " + welt.getFeldInBlickrichtung(besuchtSetzen));
+                    if (debug)
+                        System.out.println("suche Unbekanntes = Feld in Blickrichtung: " + welt.getFeldInBlickrichtung(besuchtSetzen));
                     if (!nichtErreichbareZielFelder.contains(f)) return f;
 
                 }
                 // 4 direkt erreichbare Felder prüfen
                 if (welt.isInMap(x + m, y) && !(f = welt.getFeld(x + m, y, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
-                    //if (debug) System.out.println("suche Unbekanntes: " + (x + m) + "," + y);
+                    if (debug) System.out.println("suche Unbekanntes: " + (x + m) + "," + y);
                     if (!nichtErreichbareZielFelder.contains(f)) return f;
 
                 }
                 if (welt.isInMap(x - m, y) && !(f = welt.getFeld(x - m, y, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
-                    //if (debug) System.out.println("suche Unbekanntes: " + (x - m) + "," + y);
+                    if (debug) System.out.println("suche Unbekanntes: " + (x - m) + "," + y);
                     if (!nichtErreichbareZielFelder.contains(f)) return f;
 
                 }
                 if (welt.isInMap(x, y + m) && !(f = welt.getFeld(x, y + m, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
-                    //if (debug) System.out.println("suche Unbekanntes: " + x + "," + (y + m));
+                    if (debug) System.out.println("suche Unbekanntes: " + x + "," + (y + m));
                     if (!nichtErreichbareZielFelder.contains(f)) return f;
 
                 }
                 if (welt.isInMap(x, y - m) && !(f = welt.getFeld(x, y - m, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
-                    //if (debug) System.out.println("suche Unbekanntes: " + x + m + "," + (y - m));
+                    if (debug) System.out.println("suche Unbekanntes: " + x + m + "," + (y - m));
                     if (!nichtErreichbareZielFelder.contains(f)) return f;
 
                 }
@@ -691,29 +691,37 @@ public class Berechnung {
                 //weitere Felder prüfen
                 for (int i = 1; i <= m; i++) {
                     if (welt.isInMap(x + m, y + i) && !(f = welt.getFeld(x + m, y + i, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                     if (welt.isInMap(x + m, y - i) && !(f = welt.getFeld(x + m, y - i, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                     if (welt.isInMap(x - m, y + i) && !(f = welt.getFeld(x - m, y + i, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                     if (welt.isInMap(x - m, y - i) && !(f = welt.getFeld(x - m, y - i, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                 }
                 for (int i = 1; i <= m; i++) {
                     if (welt.isInMap(x + i, y + m) && !(f = welt.getFeld(x + i, y + m, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                     if (welt.isInMap(x + i, y - m) && !(f = welt.getFeld(x + i, y - m, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                     if (welt.isInMap(x - i, y + m) && !(f = welt.getFeld(x - i, y + m, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
                     }
                     if (welt.isInMap(x - i, y - m) && !(f = welt.getFeld(x - i, y - m, besuchtSetzen)).isBesucht() && f.getRisiko() < maxRisiko) {
+                        if(debug) System.out.println("suche Unbekanntes: " + f);
                         if (!nichtErreichbareZielFelder.contains(f)) return f;
 
                     }
@@ -741,18 +749,19 @@ public class Berechnung {
             //Bedingungen für Zwischenfelder:
             if(debug) System.out.println("Zwischenfeld: " + zwischenfeld);
             if (zwischenfeld.getAnzahlBesucht() <= maxAnzahlBesucht && welt.isInMap(zwischenfeld) && !nichtErreichbareZwischenFelder.contains(zwischenfeld)) {
-                if (!modus.equalsIgnoreCase("umrande") && i < 3) {
+                if (!modus.equalsIgnoreCase("umrande") && i < 2) {
                     if (!welt.isEingekesselt(zwischenfeld, 45, besuchtSetzen, anzahlEinkesselndeFelder)) break;
                     else {
-                        //nichtErreichbareZwischenFelder.add(zwischenfeld); da sonst wenn Zwischenfeld in Case 3 nochmal auftritt, dieses nicht genommen wird
                         System.out.println("Liste nicht erreichbarer Zwischenfelder: " + nichtErreichbareZwischenFelder);
                         setZwischenfeldErreicht();
                     }
                 } else{
                     break;
                 }
-            } else {
-                nichtErreichbareZwischenFelder.add(zwischenfeld);
+            }
+            else {
+                if(i == zwischenzielFaelle) nichtErreichbareZwischenFelder.add(zwischenfeld);
+
                 System.out.println("Liste nicht erreichbarer Zwischenfelder: " + nichtErreichbareZwischenFelder);
                 setZwischenfeldErreicht();
             }

@@ -64,7 +64,11 @@ public class MyAgent extends WumpusHunterAgent {
         if (percept.isBreeze()) {
             welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], WIND, berechnung.isBesuchtSetzen());
 
-            if (!welt.isVonWindUmgeben(welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1], false))) {
+            if (!welt.isVonWindUmgeben(welt.getFeld(welt.getHunterPos()[0]+1, welt.getHunterPos()[1], false)) &&
+                    !welt.isVonWindUmgeben(welt.getFeld(welt.getHunterPos()[0]-1, welt.getHunterPos()[1], false))&&
+                    !welt.isVonWindUmgeben(welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]+1, false))&&
+                    !welt.isVonWindUmgeben(welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1]-1, false))){
+
                 welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], EVTFALLE, berechnung.isBesuchtSetzen());
                 welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], EVTFALLE, berechnung.isBesuchtSetzen());
                 welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, EVTFALLE, berechnung.isBesuchtSetzen());

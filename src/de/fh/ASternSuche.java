@@ -116,9 +116,6 @@ public class ASternSuche {
         if (neuesFeld.getRisiko() > risiko || !welt.isInMap(neuesFeld.getPosition()[0], neuesFeld.getPosition()[1]))
             return;
 
-        if(berechneEntfernung(new Knoten(neuesFeld)) > berechneEntfernung(new Knoten(start))+8) return;
-
-
         //Erzeuge Nachfolgerknoten
         Knoten nachfolger = new Knoten(neuesFeld, vorgaenger);
 
