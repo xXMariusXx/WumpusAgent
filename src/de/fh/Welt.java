@@ -201,6 +201,16 @@ public class Welt {
         }
         map = tmp;
 
+        //Fallen nach Möglichkeit setzen
+        for (int x = 0; x<map[0].length;x++){
+            for(int y = 0; y<map.length;y++){
+                if (getFeld(x,y,true).getZustaende().contains(EVTFALLE) || getFeld(x,y,true).getZustaende().contains(EVTFALLE2) ){
+                    isVonWindUmgeben(getFeld(x,y,true));
+                }
+
+            }
+        }
+
     }
 
     public boolean isUmrandet() {
@@ -381,7 +391,19 @@ public class Welt {
                 (getFeldLinks(f).getZustaende().contains(WIND) || getFeldLinks(f).getZustaende().contains(WALL)) &&
                 (getFeldOben(f).getZustaende().contains(WIND)) || getFeldOben(f).getZustaende().contains(WALL))
         {
+            //Falle sicher setzen
             addZustand(f.getPosition()[0],f.getPosition()[1],FALLE,true);
+
+            //ehemalige EVTFALLE auf EVTFALLE2 setzen
+            removeZustand(f.getPosition()[0]+1,f.getPosition()[1]+1, EVTFALLE);
+            addZustand(f.getPosition()[0]+1,f.getPosition()[1]+1, EVTFALLE2,false);
+            removeZustand(f.getPosition()[0]-1,f.getPosition()[1]-1, EVTFALLE);
+            addZustand(f.getPosition()[0]-1,f.getPosition()[1]-1, EVTFALLE2,false);
+            removeZustand(f.getPosition()[0]-1,f.getPosition()[1]+1, EVTFALLE);
+            addZustand(f.getPosition()[0]-1,f.getPosition()[1]+1, EVTFALLE2,false);
+            removeZustand(f.getPosition()[0]+1,f.getPosition()[1]-1, EVTFALLE);
+            addZustand(f.getPosition()[0]+1,f.getPosition()[1]-1, EVTFALLE2,false);
+
             return true;
         }
         return false;

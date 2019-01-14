@@ -58,18 +58,24 @@ public class MyAgent extends WumpusHunterAgent {
         // ---- Hunter Stats setzen ----
         this.updateHunterStats();
 
+
+
         // ---- Wind auswerten ----
         if (percept.isBreeze()) {
-            welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], WIND,berechnung.isBesuchtSetzen());
-            welt.addZustand(welt.getHunterPos()[0]+1, welt.getHunterPos()[1], EVTFALLE,berechnung.isBesuchtSetzen());
-            welt.addZustand(welt.getHunterPos()[0]-1, welt.getHunterPos()[1], EVTFALLE,berechnung.isBesuchtSetzen());
-            welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]+1, EVTFALLE,berechnung.isBesuchtSetzen());
-            welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1]-1, EVTFALLE,berechnung.isBesuchtSetzen());
+            welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], WIND, berechnung.isBesuchtSetzen());
+
+            if (!welt.isVonWindUmgeben(welt.getFeld(welt.getHunterPos()[0], welt.getHunterPos()[1], false))) {
+                welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], EVTFALLE, berechnung.isBesuchtSetzen());
+                welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], EVTFALLE, berechnung.isBesuchtSetzen());
+                welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, EVTFALLE, berechnung.isBesuchtSetzen());
+                welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, EVTFALLE, berechnung.isBesuchtSetzen());
+            }
         }
+
 
         // ---- Gold setzen ----
         if (percept.isGlitter()) {
-            welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], GOLD,berechnung.isBesuchtSetzen());
+            welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1], GOLD, berechnung.isBesuchtSetzen());
             berechnung.setModus("goldAufnehmen");
         }
 
@@ -79,7 +85,7 @@ public class MyAgent extends WumpusHunterAgent {
         }
 
         //Wenn Wumpus sich bewegt hat, das aktuelle Zwischenfeld aber noch nicht erreicht ist, sollte eventuell ein neues Zwischenfeld berrechnet werden
-        if (percept.isRumble() && !stenchRadar.isEmpty())  berechnung.setZwischenfeldErreicht();
+        if (percept.isRumble() && !stenchRadar.isEmpty()) berechnung.setZwischenfeldErreicht();
 
 
         if (!stenchRadar.isEmpty()) {
@@ -181,7 +187,7 @@ public class MyAgent extends WumpusHunterAgent {
      * Diesen Part erweitern Sie so, dass die nächste(n) sinnvolle(n) Aktion(en),
      * auf Basis der vorhandenen Zustandsinformationen und gegebenen Zielen, ausgeführt wird/werden.
      * Der action-Part soll den Agenten so intelligent wie möglich handeln lassen
-     *
+     * <p>
      * Beispiel: Wenn die letzte Wahrnehmung
      * "percept.isGlitter() == true" enthielt, ist "HunterAction.GRAB" eine
      * geeignete Tätigkeit. Wenn Sie wissen, dass ein Quadrat "unsicher"
@@ -195,13 +201,13 @@ public class MyAgent extends WumpusHunterAgent {
         berechnung.berechne();
         HunterAction nextHunterAction = welt.getNextAction();
         welt.aktuelleAktionAusgefuehrt();
-        switch (nextHunterAction){
+        switch (nextHunterAction) {
             case QUIT_GAME:
                 System.out.println("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!SPIEL ENDE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
                 welt.displayRisiko();
                 welt.displayBesucht();
                 System.out.println("restlicher Punktestand: " + welt.getPunkte());
-                System.out.println("Anzahl abgefeuerter Pfeile: " + (100-welt.getAnzahlPfeile()));
+                System.out.println("Anzahl abgefeuerter Pfeile: " + (100 - welt.getAnzahlPfeile()));
                 System.out.println("alle Wumpi getötet: " + !welt.isWumpusLebendig());
                 System.out.println("Gold gefunden: " + welt.isGoldAufgesammelt());
                 break;
@@ -240,23 +246,23 @@ public class MyAgent extends WumpusHunterAgent {
                             case SOUTH:
                                 welt.removeWumpusGefahr(berechnung.isBesuchtSetzen());
                                 break;
-                            }
+                        }
                         break;
 
                     case GO_FORWARD:
                         welt.removePunkte(1);
                         switch (welt.getBlickrichtung()) {
                             case EAST:
-                                welt.updateHunterPos(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1],berechnung.isBesuchtSetzen());
+                                welt.updateHunterPos(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], berechnung.isBesuchtSetzen());
                                 break;
                             case WEST:
-                                welt.updateHunterPos(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1],berechnung.isBesuchtSetzen());
+                                welt.updateHunterPos(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], berechnung.isBesuchtSetzen());
                                 break;
                             case NORTH:
-                                welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1,berechnung.isBesuchtSetzen());
+                                welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, berechnung.isBesuchtSetzen());
                                 break;
                             case SOUTH:
-                                welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1,berechnung.isBesuchtSetzen());
+                                welt.updateHunterPos(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, berechnung.isBesuchtSetzen());
                                 break;
                         }
                         break;
@@ -302,28 +308,28 @@ public class MyAgent extends WumpusHunterAgent {
 
             case BUMPED_INTO_WALL:
                 welt.wandErgaenzen();
-                switch (welt.getBlickrichtung()){
+                switch (welt.getBlickrichtung()) {
                     case SOUTH:
-                        welt.addZustand(0,welt.getHunterPos()[1]+1,WALL,true);
+                        welt.addZustand(0, welt.getHunterPos()[1] + 1, WALL, true);
                         break;
                     case EAST:
-                        welt.addZustand(welt.getHunterPos()[0]+1,0,WALL,true);
+                        welt.addZustand(welt.getHunterPos()[0] + 1, 0, WALL, true);
                         break;
                 }
                 berechnung.setZielfeldErreicht();
                 welt.removeLastAction();
                 switch (welt.getBlickrichtung()) {
                     case EAST:
-                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], WALL,berechnung.isBesuchtSetzen());
+                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], WALL, berechnung.isBesuchtSetzen());
                         break;
                     case WEST:
-                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], WALL,berechnung.isBesuchtSetzen());
+                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], WALL, berechnung.isBesuchtSetzen());
                         break;
                     case NORTH:
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, WALL,berechnung.isBesuchtSetzen());
+                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, WALL, berechnung.isBesuchtSetzen());
                         break;
                     case SOUTH:
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, WALL,berechnung.isBesuchtSetzen());
+                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, WALL, berechnung.isBesuchtSetzen());
                         break;
                 }
                 break;
@@ -345,66 +351,65 @@ public class MyAgent extends WumpusHunterAgent {
         }
 
         //Wand auswerten
-        if (percept.isBump()){
+        if (percept.isBump()) {
             //System.out.println("isBump wird ausgewertet!");
             if (welt.getHunterPos()[0] == 1) {
                 //System.out.println("Bump Fall1 - Wand links ergänzen");
-                welt.addZustand(0,welt.getHunterPos()[1],WALL,true);
+                welt.addZustand(0, welt.getHunterPos()[1], WALL, true);
                 welt.wandErgaenzen();
-            }
-            else if (welt.getHunterPos()[1] == 1){
+            } else if (welt.getHunterPos()[1] == 1) {
                 //System.out.println("Bump Fall2 - Wand oben ergänzen");
-                welt.addZustand(welt.getHunterPos()[0],0,WALL,true);
+                welt.addZustand(welt.getHunterPos()[0], 0, WALL, true);
                 welt.wandErgaenzen();
             }
         }
     }
 
     private void gestankAuswerten() {
-            for (Map.Entry<Integer, Integer> g : stenchRadar.entrySet()) {
-                switch (g.getValue()) {
-                    case 1:
-                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], GESTANK1,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], GESTANK1,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, GESTANK1,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, GESTANK1,berechnung.isBesuchtSetzen());
-                        break;
-                    case 2:
-                        welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1], GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1], GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 2, GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 2, GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] + 1, GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 1, GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 1, GESTANK2,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 1, GESTANK2,berechnung.isBesuchtSetzen());
-                        break;
-                    case 3:
-                        welt.addZustand(welt.getHunterPos()[0] + 3, welt.getHunterPos()[1], GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 3, welt.getHunterPos()[1], GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 3, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 3, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1] + 1, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1] - 1, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1] + 1, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1] - 1, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] + 2, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 2, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 2, GESTANK3,berechnung.isBesuchtSetzen());
-                        welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 2, GESTANK3,berechnung.isBesuchtSetzen());
-                        break;
-                }
+        for (Map.Entry<Integer, Integer> g : stenchRadar.entrySet()) {
+            switch (g.getValue()) {
+                case 1:
+                    welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1], GESTANK1, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1], GESTANK1, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 1, GESTANK1, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 1, GESTANK1, berechnung.isBesuchtSetzen());
+                    break;
+                case 2:
+                    welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1], GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1], GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 2, GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 2, GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] + 1, GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 1, GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 1, GESTANK2, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 1, GESTANK2, berechnung.isBesuchtSetzen());
+                    break;
+                case 3:
+                    welt.addZustand(welt.getHunterPos()[0] + 3, welt.getHunterPos()[1], GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 3, welt.getHunterPos()[1], GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] + 3, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0], welt.getHunterPos()[1] - 3, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1] + 1, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] + 2, welt.getHunterPos()[1] - 1, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1] + 1, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 2, welt.getHunterPos()[1] - 1, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] + 2, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] + 1, welt.getHunterPos()[1] - 2, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] + 2, GESTANK3, berechnung.isBesuchtSetzen());
+                    welt.addZustand(welt.getHunterPos()[0] - 1, welt.getHunterPos()[1] - 2, GESTANK3, berechnung.isBesuchtSetzen());
+                    break;
             }
+        }
 
     }
 
-    private void gestankLoeschen(){
-        for (int i = 0; i<welt.getMapSize()[0];i++){
+    private void gestankLoeschen() {
+        for (int i = 0; i < welt.getMapSize()[0]; i++) {
             for (int j = 0; j < welt.getMapSize()[1]; j++) {
-                welt.removeZustand(i,j, GESTANK1);
-                welt.removeZustand(i,j, GESTANK2);
-                welt.removeZustand(i,j, GESTANK3);
-                welt.removeZustand(i,j, EVTWUMPUS);
+                welt.removeZustand(i, j, GESTANK1);
+                welt.removeZustand(i, j, GESTANK2);
+                welt.removeZustand(i, j, GESTANK3);
+                welt.removeZustand(i, j, EVTWUMPUS);
             }
         }
     }

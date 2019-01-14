@@ -30,7 +30,8 @@ public class Feld {
 
         WIND(31),
         EVTFALLE(91),
-        FALLE(99);
+        EVTFALLE2(47),
+        FALLE(98);
 
 
         private final int bewertung;
@@ -108,13 +109,20 @@ public class Feld {
             case EVTFALLE:
                 //wenn Feld schon besucht, kann es keine Falle mehr sein
                 if (besucht) break;
+                set.remove(Zustand.EVTFALLE2);
                 set.add(z);
-                setBesucht();
+                break;
+
+            case EVTFALLE2:
+                //wenn Feld schon besucht, kann es keine Falle mehr sein
+                if (besucht) break;
+                if(set.contains(Zustand.EVTFALLE)) break;
+                set.add(z);
                 break;
 
             case FALLE:
                 set.remove(Zustand.EVTFALLE);
-                if (besucht) break;
+                set.remove(Zustand.EVTFALLE2);
                 set.add(z);
                 setBesucht();
                 break;
@@ -125,6 +133,7 @@ public class Feld {
                 break;
 
             default:
+                set.add(z);
 
         }
         set.remove(Zustand.UNBEKANNT);

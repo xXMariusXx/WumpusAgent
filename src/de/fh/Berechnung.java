@@ -7,7 +7,7 @@ import java.util.HashSet;
 import static de.fh.Feld.Zustand.*;
 //1. TODO Vom Wumpus getötet werden wenn beide gleichzeitig aufs gleiche Feld gehen
 //3. TODO Fallen genauer bestimmen (modus Falltesten)
-//5. TODO Wumpus töten wenn Gold eingesammelt
+//5. TODO Wumpus töten wenn Gold eingesammelt oder alle Felder besucht
 //4. TODO nicht erreichbare Felder markieren
 
 public class Berechnung {
@@ -363,7 +363,7 @@ public class Berechnung {
         //Wenn bereits ein Zielfeld gegeben ist: Springen zu Zwischenfeld berechnen
         if (!welt.isInMap(zielfeld)) {
             //Sofern möglich ein neues Hauptziel bestimmen
-            fall = aufrufBestimmeNaechstesZielFeld(0);
+            aufrufBestimmeNaechstesZielFeld(0);
 
             //In dem Fall, dass kein neues HauptZielfeld mehr gefunden werden konnte: Spiel verlassen
             if (!welt.isInMap(zielfeld)) {
