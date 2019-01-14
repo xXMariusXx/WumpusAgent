@@ -31,7 +31,6 @@ public class Welt {
     private boolean umrandet = false;
     private Hashtable<Integer, Integer> stenchRadarBefore;
     private Hashtable<Integer, Integer> stenchRadarAfter;
-    private LinkedList<Knoten> letzteBesuchteFelder;
 
 
 
@@ -59,8 +58,6 @@ public class Welt {
         hunterPos[0] = 1;
         hunterPos[1] = 1;
         blickrichtung = Himmelsrichtung.EAST;
-
-        letzteBesuchteFelder = new LinkedList<>();
     }
 
 
@@ -170,9 +167,8 @@ public class Welt {
             addZustand(hunterPos[0]+1,hunterPos[1]-1,WALL,true);
         }
 
-        if (!getFeld(hunterPos[0],0,true).getZustaende().contains(WALL)) addZustand(hunterPos[0],0,WALL,true);
-
-        if (!getFeld(0,hunterPos[1],true).getZustaende().contains(WALL)) addZustand(0,hunterPos[1],WALL,true);
+        addZustand(hunterPos[0],0,WALL,true);
+        addZustand(0,hunterPos[1],WALL,true);
 
         if (getFeld(hunterPos[0]+1,getHunterPos()[1],true).getZustaende().contains(WALL)) addZustand(hunterPos[0]+1,0,WALL,true);
 
@@ -378,29 +374,33 @@ public class Welt {
         return punkte;
     }
 
-    public boolean isInLetzteBesuchteFelder(Feld gesucht, int maxAnzahlOk){
-        for (Knoten k: letzteBesuchteFelder){
-            if (k.getFeld() == gesucht && k.getAnzahlBesucht() > maxAnzahlOk) {
-                System.out.println("Ist in zuletzt besuchte Felder über maxAnzahl: " + gesucht + "Anzahl: " + k.getAnzahlBesucht());
-                return true;
-            }
+    public boolean isVonWindUmgeben(Feld f){
+        //Wenn ein Feld an allen Seiten von Wind oder Wand umgeben ist: Feld auf "Falle" setzen
+        if ((getFeldRechts(f).getZustaende().contains(WIND) || getFeldRechts(f).getZustaende().contains(WALL)) &&
+                (getFeldUnten(f).getZustaende().contains(WIND)|| getFeldUnten(f).getZustaende().contains(WALL)) &&
+                (getFeldLinks(f).getZustaende().contains(WIND) || getFeldLinks(f).getZustaende().contains(WALL)) &&
+                (getFeldOben(f).getZustaende().contains(WIND)) || getFeldOben(f).getZustaende().contains(WALL))
+        {
+            addZustand(f.getPosition()[0],f.getPosition()[1],FALLE,true);
+            return true;
         }
         return false;
     }
 
-    private void addToLetzteFelder(Feld f){
-        for (Knoten k: letzteBesuchteFelder) {
-            if (k.getFeld() == f) {
-                k.setAnzahlBesucht();
-                System.out.println("Feld zu zuletzt besucht Anzahl erhöht: " + f);
-                return;
-            }
-        }
-        if(letzteBesuchteFelder.size() > 5) letzteBesuchteFelder.removeFirst();
+    public Feld getFeldRechts(Feld f){
+        return getFeld(f.getPosition()[0]+1,f.getPosition()[1],false);
+    }
 
-        letzteBesuchteFelder.add(new Knoten(f));
+    public Feld getFeldLinks(Feld f){
+        return getFeld(f.getPosition()[0]-1,f.getPosition()[1],false);
+    }
 
-        System.out.println("Feld zu zuletzt besucht hinzugefügt: " + f);
+    public Feld getFeldUnten(Feld f){
+        return getFeld(f.getPosition()[0],f.getPosition()[1]+1,false);
+    }
+
+    public Feld getFeldOben(Feld f){
+        return getFeld(f.getPosition()[0],f.getPosition()[1]-1,false);
     }
 
 
@@ -438,7 +438,6 @@ public class Welt {
         hunterPos[0] = x;
         hunterPos[1] = y;
 
-        this.addToLetzteFelder(getFeldHinterMir());
     }
 
     public int[] getHunterPos() {

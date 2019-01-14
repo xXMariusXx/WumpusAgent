@@ -10,6 +10,7 @@ public class Feld {
     private boolean besucht;
     private int[] position;
     private boolean beschossen = false;
+    private int anzahlBesucht = 0;
 
 
     //Zustand Enum
@@ -46,7 +47,7 @@ public class Feld {
 
 
     public Feld(Zustand z, int x, int y,boolean besuchtSetzen) {
-        set = new HashSet<Zustand>();
+        set = new HashSet<>();
         addZustand(z,besuchtSetzen);
         position = new int[2];
         position[0] = x;
@@ -59,8 +60,8 @@ public class Feld {
         switch (z) {
             case GESTANK1:
                 //wenn schon stärkerer Gestank vorhanden ist, muss der schwächere nicht hinzugefügt werden
-                if (set.contains(Zustand.GESTANK2)) set.remove(Zustand.GESTANK2);
-                if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
+                set.remove(Zustand.GESTANK2);
+                set.remove(Zustand.GESTANK3);
                 if (set.contains(Zustand.WALL)) break;
                 if (isBesucht()){
                     set.add(Zustand.GESTANK2);
@@ -71,7 +72,7 @@ public class Feld {
 
             case GESTANK2:
                 if (set.contains(Zustand.GESTANK1)) break;
-                if (set.contains(Zustand.GESTANK3)) set.remove(Zustand.GESTANK3);
+                set.remove(Zustand.GESTANK3);
                 if (set.contains(Zustand.WALL)) break;
                 if (isBesucht()){
                     set.add(Zustand.GESTANK1);
@@ -99,12 +100,20 @@ public class Feld {
                 set.remove(Zustand.GESTANK1);
                 set.remove(Zustand.EVTFALLE);
                 set.remove(Zustand.EVTWUMPUS);
+                anzahlBesucht++;
                 set.add(z);
                 if(besuchtSetzen) setBesucht();
                 break;
 
             case EVTFALLE:
                 //wenn Feld schon besucht, kann es keine Falle mehr sein
+                if (besucht) break;
+                set.add(z);
+                setBesucht();
+                break;
+
+            case FALLE:
+                set.remove(Zustand.EVTFALLE);
                 if (besucht) break;
                 set.add(z);
                 setBesucht();
@@ -169,6 +178,18 @@ public class Feld {
 
     public boolean isGueltig(){
         return position[0] > -1 && position[1] > -1;
+    }
+
+    public int getAnzahlBesucht() {
+        return anzahlBesucht;
+    }
+
+    public void setAnzahlBesucht(int anzahlBesucht) {
+        this.anzahlBesucht = anzahlBesucht;
+    }
+
+    public void addAnzahlBesucht(){
+        anzahlBesucht++;
     }
 
     @Override

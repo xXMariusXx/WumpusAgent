@@ -221,6 +221,7 @@ public class MyAgent extends WumpusHunterAgent {
     private void updateHunterStats() {
         switch (actionEffect) {
             case MOVEMENT_SUCCESSFUL:
+                welt.wandErgaenzen();
                 switch (welt.getLastAction()) {
                     case SHOOT:
                         welt.pfeilGeschossen();
@@ -301,7 +302,14 @@ public class MyAgent extends WumpusHunterAgent {
 
             case BUMPED_INTO_WALL:
                 welt.wandErgaenzen();
-                //berechnung.setModus("checkEcke");
+                switch (welt.getBlickrichtung()){
+                    case SOUTH:
+                        welt.addZustand(0,welt.getHunterPos()[1]+1,WALL,true);
+                        break;
+                    case EAST:
+                        welt.addZustand(welt.getHunterPos()[0]+1,0,WALL,true);
+                        break;
+                }
                 berechnung.setZielfeldErreicht();
                 welt.removeLastAction();
                 switch (welt.getBlickrichtung()) {
